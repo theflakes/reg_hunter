@@ -80,3 +80,4 @@ Note:
 
     Files larger than 256MB will not be hashed.
     ```
+    
