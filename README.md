@@ -101,7 +101,7 @@ Example JSON log:
    "last_write_time":"2020-11-16T12:36:21.928",
    "tags":[
       "Obfuscation",
-      "Encoding
+      "Encoding"
    ]
 }
 ```
