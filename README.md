@@ -5,6 +5,8 @@ Thank you to https://twitter.com/Hexacorn and https://twitter.com/SBousseaden fo
 
 Output is in JSON.
 
+If you just want the tool, download the reg_hunter.exe binary.
+
 NOTE: The parent_data_type field specifies the data_type that caused the generation of this data type. E.g. If a Lnk file was found in a registry value, this will generate a "ShellLink" data_type with a parent_data_type of "Registry". Then a data_type of "File" with a parent_data_type of "ShellLink" will be generated if the file that the Lnk file points to is found/exists. I.e. Registry --> ShellLink --> File
 
 ```
