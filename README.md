@@ -1,6 +1,12 @@
 # reg_hunter
 Blueteam operational triage registry hunting/forensic tool.
 
+Thank you to https://twitter.com/Hexacorn and https://twitter.com/SBousseaden for their open research. Many of the explicit registry keys and values defined in this tool came from their graciously shared hard work.
+
+Output is in JSON.
+
+NOTE: The parent_data_type field specifies the data_type that caused the generation of this data type. E.g. If a Lnk file was found in a registry value, this will generate a "ShellLink" data_type with a parent_data_type of "Registry". Then a data_type of "File" with a parent_data_type of "ShellLink" will be generated if the file that the Lnk file points to is found/exists. I.e. Registry --> ShellLink --> File
+
 ```
 Reg Hunter
     Author: Brian Kellogg
