@@ -5,7 +5,7 @@ Thank you to https://twitter.com/Hexacorn and https://twitter.com/SBousseaden fo
 
 Thanks to https://github.com/lilopkins and https://github.com/gentoo90 for the Lnk and Registry Rust crates.
 
-Output is in JSON.
+Output is in JSON line delimited.
 
 If you just want the tool, download the reg_hunter.exe binary.
 
@@ -79,3 +79,27 @@ Note:
     Use the -k option with netcat to prevent netcat from closing after a TCP connection is closed.
 
     Files larger than 256MB will not be hashed.
+```
+
+
+Example JSON log:
+```
+{
+   "parent_data_type":"",
+   "data_type":"Registry",
+   "timestamp":"2020-11-18T02:26:05.144",
+   "device_name":"DESKTOP-NDPUHM4",
+   "device_domain":"DESKTOP-NDPUHM4",
+   "device_type":"Windows 10",
+   "registry_hive":"HKEY_USERS",
+   "registry_key":"Volatile",
+   "registry_value_name":"MsaDevice",
+   "registry_type":"REG_SZ",
+   "registry_value":"t=GwAWAbuEBAAUPrSa9Xbh1D0J93uIPuLO4a+WXwAOZgAAEBTGT0K0Z4Yb1yQ+kp9BEdHgANLuAcfHOSjYFFBzGrBrLhP7Tn42DVLHomaP99kfluqc6pesVhV/Pwr486/KC0rhecROAWOfhfLOeIzcCP3ac+7Gd39nLfE3i0XBqwixziztwygu+xEFSlxrHSRLu0Rl1YWZ4rasrpcX+r43oj6PLzuVWtCkwq+mcFMKhjdC9394PnyoO4hh0oPxt9Gk3JZN784wc6D3AKMT8nntlvzhsBpN+nedTBBTzDmqDh3KiZCgGQTghwy/qXV4/wIg/2Hu1XXbe2f1EbymQeQ1+flMSoIzD15JRNDXITeFWljFcGwE=&p=",
+   "last_write_time":"2020-11-16T12:36:21.928",
+   "tags":[
+      "Obfuscation",
+      "Encoding
+   ]
+}
+```
