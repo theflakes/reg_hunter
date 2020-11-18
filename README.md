@@ -11,6 +11,7 @@ NOTE: The parent_data_type field specifies the data_type that caused the generat
 Reg Hunter
     Author: Brian Kellogg
     License: MIT
+    Many thanks: @Hexacorn and @SBousseaden
     Disclaimer: 
         This tool comes with no warranty or support. 
         If anyone chooses to use it, you accept all responsibility and liability.
