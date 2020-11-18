@@ -79,5 +79,3 @@ Note:
     Use the -k option with netcat to prevent netcat from closing after a TCP connection is closed.
 
     Files larger than 256MB will not be hashed.
-    ```
-    
