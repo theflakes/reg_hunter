@@ -100,10 +100,9 @@ Switches:
         -r, --script                Find script files
         -s, --shellcode             Find possible shellcode
         -w, --url                   Find URLs
-        -y, --everything            Run ALL forensics
+        -y, --everything            Run ALL the hunts
         -z, --suspicious            Find various suspicious substrings
                                         e.g. iex, invoke-expression, etc.
-        
 
     Network output:
         -d, --destination <ip>      IP address to send output to [default: NONE]

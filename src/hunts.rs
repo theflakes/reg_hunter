@@ -37,7 +37,7 @@ pub fn found_encoding(
     lazy_static! {
         static ref ENCODING: Regex = Regex::new(r#"(?mix)
             (   
-                [a-z0-9=]{300}
+                [a-z0-9=/+&]{300}
             )                                                                  
         "#).expect("Invalid Regex");
     }
@@ -101,7 +101,7 @@ pub fn found_script(
                 [cw]script|mshta(?:\.exe)?|
                 \.(?:bat|cmd|com|hta|jse?|vb[se]|ps1|ws[fh]?)(?:[,|\s'"><&]|$)|
                 javascript|RunHTMLApplication|script:|
-                WScript.Shell|vbscript:|Shell.Run|
+                WScript\.Shell|vbscript:|Shell\.Run|
                 e:(?:vb|j)script|
                 ShellExecute|ExecuteShellCommand
             )                                                                  
@@ -158,7 +158,7 @@ pub fn found_suspicious(
             (   
                 FromBase64String|ToBase64String|System\.Text\.Encoding|
                 System\.Convert|securestringtoglobalallocunicode|
-                [string]::join|.GetString|
+                [string]::join|\.GetString|
 
                 /t(?:icket|arget)|
                 ACgAJwBVAHMAZQByAC0AQQBnAGUAbgB0ACcALAAk|                       # Empire RAT
@@ -191,11 +191,8 @@ pub fn found_suspicious(
                 CompressDLL|
                 Control_RunDLL|
                 CredentialInjection|
-                dllimport|
-                DllInjection|
-                downloadstring|
-                downloadfile|
-                DownloadData|
+                dll(?:import|injection)|
+                download(?:file|data|string)|
                 OpenRead|
                 WEBReQuEst|
                 \.Download|
@@ -205,11 +202,12 @@ pub fn found_suspicious(
                 EncodeCommand|
                 EncryptedScript|
                 Exploit-Jboss|
-                Find-Fruit|
-                Find-GPOLocation|
-                Find-TrustedDocuments|
-                GPPAutologon|
-                GPPPassword|
+                Find-(?:
+                    Fruit|
+                    GPOLocation|
+                    TrustedDocuments
+                )|
+                GPP(?:Autologon|Password)|
                 Get-(?:
                     ApplicationHost|
                     ChromeDump|
@@ -242,8 +240,10 @@ pub fn found_suspicious(
                 Gupt-Backdoor|
                 HTTP-Login|
                 IMAGE_NT_OPTIONAL_HDR64_MAGIC|
-                Install-SSP|
-                Install-ServiceBinary|
+                Install-(?:
+                    SSP|
+                    ServiceBinary
+                )|
                 Invoke-(?:
                     ACLScanner|
                     ADSBackdoor|
@@ -304,14 +304,16 @@ pub fn found_suspicious(
                     HoneyHash|
                     Object
                 )|
-                net.webclient|
+                net\.webclient|
                 NinjaCopy|
                 Out-Minidump|
                 PAGE_EXECUTE_READ|
                 Port-Scan|
-                PowerBreach|
-                PowerUp|
-                PowerView|
+                Power(?:
+                    Breach|
+                    Up|
+                    View
+                )|
                 procdump|
                 ReadProcessMemory.Invoke|
                 ReflectivePEInjection|
@@ -327,8 +329,10 @@ pub fn found_suspicious(
                 )|
                 ShellCode|
                 Show-TargetScreen|
-                Start-CaptureServer|
-                Start-Process|
+                Start-(?:
+                    CaptureServer|
+                    Process
+                )|
                 TOKEN_(?:
                     ADJUST_PRIVILEGES|
                     ALL_ACCESS|
@@ -346,7 +350,7 @@ pub fn found_suspicious(
                 VaultCredential|
                 VolumeShadowCopyTools|
                 WmiCommand|
-                (WCHAR)|
+                \(WCHAR\)|
                 IncludeLiveDump="
             )(?:[|\s'"><&]|$)                                                                  
         "#).expect("Invalid Regex");
