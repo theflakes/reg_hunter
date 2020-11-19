@@ -96,9 +96,9 @@ Switches:
         -m, --email                 Find email addresses
         -n, --null                  Hunt for null prefixed value names
         -o, --obfuscation           Find obfuscated values
-        -u, --unc                   Find possible UNC paths
         -r, --script                Find script files
         -s, --shellcode             Find possible shellcode
+        -u, --unc                   Find possible UNC paths
         -w, --url                   Find URLs
         -y, --everything            Run ALL the hunts
         -z, --suspicious            Find various suspicious substrings
