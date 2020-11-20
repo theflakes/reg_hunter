@@ -2,8 +2,9 @@ extern crate winreg;            // Windows registry access
 extern crate chrono;            // DateTime manipulation
 extern crate regex;
 
-
 use regex::Regex;
+use crate::{data_defs::*};
+use std::{str};
 
 /* 
         use \x20 for matching spaces when using "x" directive that doesn't allow spaces in regex
@@ -13,6 +14,27 @@ use regex::Regex;
             (?:$|\s|[/:@#&\(\]|=\\\}'\"><])
 */
 
+// Custom regex hunt specified on command line
+//ARGS.flag_path || ARGS.flag_name || ARGS.flag_value
+pub fn found_custom(
+                key: &str,
+                value_name: &str,
+                value: &str
+            ) -> std::io::Result<bool> 
+{   
+    lazy_static! {
+        static ref CUSTOM: Regex = Regex::new(&CUSTOM_REGEX).expect("Invalid Regex");
+    }
+
+    if (ARGS.flag_path && CUSTOM.is_match(key)) 
+        || (ARGS.flag_name && CUSTOM.is_match(value_name)) 
+        || (ARGS.flag_value && CUSTOM.is_match(value)) { 
+            Ok(true) 
+        } else { 
+            Ok(false) 
+        }
+}
+
 
 pub fn found_email(
                 text: &str
@@ -20,7 +42,7 @@ pub fn found_email(
 {
     lazy_static! {
         static ref EMAIL: Regex = Regex::new(r#"(?mix)
-            (   
+            (:?   
                 [a-z0-9._%+-]+@[a-z0-9._-]+\.[a-z0-9-]{2,13}
             )                                                                  
         "#).expect("Invalid Regex");
@@ -36,7 +58,7 @@ pub fn found_encoding(
 {
     lazy_static! {
         static ref ENCODING: Regex = Regex::new(r#"(?mix)
-            (   
+            (:?
                 [a-z0-9=/+&]{300}
             )                                                                  
         "#).expect("Invalid Regex");
@@ -52,7 +74,7 @@ pub fn found_ipv4(
 {
     lazy_static! {
         static ref IPV4: Regex = Regex::new(r#"(?mix)
-            (   
+            (:?
                 (?:^|\s|[&/:<>\#({\[|'"=@]|[[:^alnum:]]\\)
                     (?:25[0-5]|2[0-4][0-9]|[1][0-9][0-9]|[1-9][0-9]|[1-9])                                          
                     (?:\.(?:25[0-5]|2[0-4][0-9]|[1][0-9][0-9]|[1-9]?[0-9])){3}
@@ -71,7 +93,7 @@ pub fn found_obfuscation(
 {
     lazy_static! {
         static ref OBFUSCATION: Regex = Regex::new(r#"(?mix)
-            (   
+            (:?
                 \[char\]|
                 \.replace|
                 (?:'?\+'?.*){7}|
@@ -97,7 +119,7 @@ pub fn found_script(
 {
     lazy_static! {
         static ref SCRIPT: Regex = Regex::new(r#"(?mix)
-            (   
+            (:?
                 [cw]script|mshta(?:\.exe)?|
                 \.(?:bat|cmd|com|hta|jse?|vb[se]|ps1|ws[fh]?)(?:[,|\s'"><&]|$)|
                 javascript|RunHTMLApplication|script:|
@@ -118,7 +140,7 @@ pub fn found_shell(
 {
     lazy_static! {
         static ref SHELL: Regex = Regex::new(r#"(?mix)
-            (   
+            (:?
                 (?:cmd|powershell|sqlps)(?:\.exe)?|pwsh
             )                                                                  
         "#).expect("Invalid Regex");
@@ -135,7 +157,7 @@ pub fn found_shellcode(
 {
     lazy_static! {
         static ref SHELL_CODE: Regex = Regex::new(r#"(?mix)
-            (   
+            (:?
                 (?:(?:[0\\]?x|\x20)?[a-f0-9]{2}[,\x20;:\\]){50}
             )                                                                  
         "#).expect("Invalid Regex");
@@ -155,7 +177,7 @@ pub fn found_suspicious(
 {
     lazy_static! {
         static ref SUSPICIOUS: Regex = Regex::new(r#"(?mix)
-            (   
+            (:?
                 FromBase64String|ToBase64String|System\.Text\.Encoding|
                 System\.Convert|securestringtoglobalallocunicode|
                 [string]::join|\.GetString|
@@ -366,7 +388,7 @@ pub fn found_unc(
 {
     lazy_static! {
         static ref UNC: Regex = Regex::new(r#"(?mix)
-            (   
+            (:?
                 \\\\[a-z0-9_.$-]+\\[a-z0-9_.$-]+
             )                                                                  
         "#).expect("Invalid Regex");
@@ -382,7 +404,7 @@ pub fn found_url(
 {
     lazy_static! {
         static ref URL: Regex = Regex::new(r#"(?mix)
-            (   
+            (:?
                 (?:https?|ftp|smb|cifs)://
             )                                                                  
         "#).expect("Invalid Regex");

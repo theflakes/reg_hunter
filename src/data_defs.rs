@@ -73,16 +73,16 @@ Reg Hunter
 Usage:
     reg_hunter [options]
     reg_hunter --explicit -f -n [--ip <ip> --port <port>]
-    reg_hunter --all --null [--ip <ip> --port <port>] [--limit]
-    reg_hunter --all --explicit -b -f --limit
+    reg_hunter --all [-bcefimnorsuwyz] [--ip <ip> --port <port>] [--limit]
     reg_hunter --help
+    reg_hunter -a [-bn] [--regex <regex> [--path | --name | --value]]
 
-Switches:
-    Registry context:
+Options:
+    Registry context (one required):
         -a, --all                   Examine all the registry; HKLM and HKU
         -x, --explicit              Examine only more often forensically interesting keys and values
                                         This option will always report out all 
-                                        value names and values unless values are empty/null.
+                                        value names and values unless values are empty/null
 
     Hunts:
         -b, --binary                Find possible MZ headers in REG_BINARY values
@@ -103,6 +103,15 @@ Switches:
         -y, --everything            Run ALL the hunts
         -z, --suspicious            Find various suspicious substrings
                                         e.g. iex, invoke-expression, etc.
+
+    Custom hunt (regex expression required):
+        -q, --regex <regex>         Custom regex expression [default: NONE]
+                                        Does not support look aheads/behinds/...
+                                        Uses Rust regex crate (case insensitive)
+                                        Any match will add 'Custom' to the tags field
+        -k, --path                  Search reg key path
+        -t, --name                  Search value name
+        -v, --value                 Search reg value
 
     Network output:
         -d, --destination <ip>      IP address to send output to [default: NONE]
@@ -128,32 +137,48 @@ Note:
 
 #[derive(Debug, Deserialize)]
 pub struct Args {
+    // what to examine
     pub flag_all: bool,
-    pub flag_binary: bool,
-    pub flag_destination: String,
-    pub flag_encoding: bool,
     pub flag_explicit: bool,
+
+    // built-in hunts
+    pub flag_binary: bool,
+    pub flag_encoding: bool,
     pub flag_email: bool,
     pub flag_everything: bool,
     pub flag_file: bool,
     pub flag_ip: bool,
-    pub flag_limit: bool,
     pub flag_null: bool,
     pub flag_obfuscation: bool,
-    pub flag_port: u16,
     pub flag_script: bool,
     pub flag_shellcode: bool,
     pub flag_shell: bool,
     pub flag_suspicious: bool,
     pub flag_unc: bool,
-    pub flag_url: bool
+    pub flag_url: bool,
+
+    // custom regex search cmd line options
+    pub flag_regex: String,
+    pub flag_path: bool,
+    pub flag_name: bool,
+    pub flag_value: bool,
+
+    // cmd line options for network output
+    pub flag_destination: String,
+    pub flag_port: u16,
+
+    //misc.
+    pub flag_limit: bool,
 }
 
 lazy_static! { 
     pub static ref ARGS: Args = Docopt::new(USAGE)
                     .and_then(|d| d.deserialize())
                     .unwrap_or_else(|e| e.exit());
+
+    pub static ref CUSTOM_REGEX: String = format!("{}{}", "(?mi)".to_string(), ARGS.flag_regex);
 }
+
 
 pub struct Results {
     pub result: bool,

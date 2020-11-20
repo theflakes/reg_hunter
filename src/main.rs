@@ -1,21 +1,7 @@
 /*
     Author: Brian Kellogg
 
-    Purpose: Operational triage of Windows security events.
-
-    TO DO:
-        Registry symlinks
-        Collect file meta data
-            Links - ported code from Linux, have not tested if it works yet
-            ADS - no idea how to do this atm
-        Scheduled Tasks - maybe use COM as I've done in PS
-        Bitsadmin
-        WMI
-        Interesting directories (startup, Office, programdata, profiles, Windows, system32, root, ...)
-        Event Logs
-        Local users / group memberships
-        ShimDB
-        ...
+    Purpose: Operational triage of Windows registry.
 
     I try to continue through all errors to allow the analysis to complete.
     But, no doubt, I missed some corner cases.
@@ -46,31 +32,35 @@ use regex::Regex;
     capture and report the line that the interesting string is found in
 */
 fn run_hunts(
-                    text: &str
+                    key: &str,
+                    value_name: &str,
+                    value: &str
                 ) -> std::io::Result<Results> 
 {
     let mut t: Results = Results {result: false, tags: vec![]};
 
-    if (ARGS.flag_everything || ARGS.flag_email) && found_email(text)? 
+    if (ARGS.flag_everything || ARGS.flag_email) && found_email(value)? 
         { t.result = true; t.tags.push("Email".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_encoding) && found_encoding(text)? 
+    if (ARGS.flag_everything || ARGS.flag_encoding) && found_encoding(value)? 
         { t.result = true; t.tags.push("Encoding".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_ip) && found_ipv4(text)? 
+    if (ARGS.flag_everything || ARGS.flag_ip) && found_ipv4(value)? 
         { t.result = true; t.tags.push("IPv4".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_obfuscation) && found_obfuscation(text)? 
+    if (ARGS.flag_everything || ARGS.flag_obfuscation) && found_obfuscation(value)? 
         { t.result = true; t.tags.push("Obfuscation".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_script) && found_script(text)? 
+    if (ARGS.flag_everything || ARGS.flag_script) && found_script(value)? 
         { t.result = true; t.tags.push("Script".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_shell) && found_shell(text)? 
+    if (ARGS.flag_everything || ARGS.flag_shell) && found_shell(value)? 
         { t.result = true; t.tags.push("Shell".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_shellcode) && found_shellcode(text)? 
+    if (ARGS.flag_everything || ARGS.flag_shellcode) && found_shellcode(value)? 
         { t.result = true; t.tags.push("ShellCode".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_suspicious) && found_suspicious(text)?    
+    if (ARGS.flag_everything || ARGS.flag_suspicious) && found_suspicious(value)?    
         { t.result = true; t.tags.push("Suspicious".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_unc) && found_unc(text)? 
+    if (ARGS.flag_everything || ARGS.flag_unc) && found_unc(value)? 
         { t.result = true; t.tags.push("UNC".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_url) && found_url(text)? 
+    if (ARGS.flag_everything || ARGS.flag_url) && found_url(value)? 
         { t.result = true; t.tags.push("URL".to_string()) }
+    if (ARGS.flag_path || ARGS.flag_name || ARGS.flag_value) && found_custom(key, value_name, value)? 
+        { t.result = true; t.tags.push("Custom".to_string()) }
     
     Ok(t)
 }
@@ -243,11 +233,13 @@ fn find_file_paths(
 }
 
 fn find_interesting_stuff(
+                            key: &str,
+                            value_name: &str,
                             value: &str,
                             already_seen: &mut Vec<String>
                         )  -> std::io::Result<Results> {
     let found_path = find_file_paths(&value.trim().trim_start_matches('"').trim_end_matches('"'), already_seen)?;
-    let found_interesting = run_hunts(&value)?;
+    let found_interesting = run_hunts(&key, &value_name, &value)?;
 
     let mut t: Results = Results {result: false, tags: vec![]};
     if found_path {
@@ -525,7 +517,7 @@ fn examine_name_value(
     let (converted, v) = value_to_string(&value.bytes)?;
     let mut interesting = Results {result: false, tags: vec![]};
     if converted {
-        interesting = find_interesting_stuff(&v, already_seen)?;
+        interesting = find_interesting_stuff(&key,&name,&v, already_seen)?;
     }
 
     // Null prefixed value names are an evasion/obfuscation tactic
