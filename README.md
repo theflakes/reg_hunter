@@ -17,7 +17,7 @@ I needed a selfcontained tool, as when I'm triaging an event, the less files I h
 
 NOTE: The "parent_data_type" field specifies the "data_type" that caused the generation of this data type. E.g. If a Lnk file was found in a registry value, this will generate a "ShellLink" data_type with a parent_data_type of "Registry". Then a data_type of "File" with a parent_data_type of "ShellLink" will be generated if the file that the Lnk file points to is found/exists. I.e. Registry --> ShellLink --> File
 
-A File/Lnk's meta data on any one file will only be collected once no matter how many times it is referenced in registry values.
+A file/lnk's meta data on any one file will only be collected once no matter how many times it is referenced in registry values.
 
 ```
 Reg Hunter
