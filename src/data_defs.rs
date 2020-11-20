@@ -104,8 +104,8 @@ Options:
         -z, --suspicious            Find various suspicious substrings
                                         e.g. iex, invoke-expression, etc.
 
-    Custom hunt (regex expression required):
-        -q, --regex <regex>         Custom regex expression [default: NONE]
+    Custom hunt (regex required):
+        -q, --regex <regex>         Custom regex [default: NONE]
                                         Does not support look aheads/behinds/...
                                         Uses Rust regex crate (case insensitive and multiline)
                                         Any match will add 'Custom' to the tags field
