@@ -105,7 +105,7 @@ Options:
                                         e.g. iex, invoke-expression, etc.
 
     Custom hunt (regex required):
-        -q, --regex <regex>         Custom regex [default: NONE]
+        -q, --regex <regex>         Custom regex [default: $^]
                                         Does not support look aheads/behinds/...
                                         Uses Rust regex crate (case insensitive and multiline)
                                         Any match will add 'Custom' to the tags field

@@ -59,8 +59,12 @@ fn run_hunts(
         { t.result = true; t.tags.push("UNC".to_string()) }
     if (ARGS.flag_everything || ARGS.flag_url) && found_url(value)? 
         { t.result = true; t.tags.push("URL".to_string()) }
-    if (ARGS.flag_path || ARGS.flag_name || ARGS.flag_value) && found_custom(key, value_name, value)? 
-        { t.result = true; t.tags.push("Custom".to_string()) }
+
+    // custom regex cmd line hunt
+    if ARGS.flag_path || ARGS.flag_name || ARGS.flag_value {
+        if ARGS.flag_regex != "$^" && found_custom(key, value_name, value)? 
+            { t.result = true; t.tags.push("Custom".to_string()) }
+    }
     
     Ok(t)
 }
