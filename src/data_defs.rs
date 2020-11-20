@@ -107,7 +107,7 @@ Options:
     Custom hunt (regex expression required):
         -q, --regex <regex>         Custom regex expression [default: NONE]
                                         Does not support look aheads/behinds/...
-                                        Uses Rust regex crate (case insensitive)
+                                        Uses Rust regex crate (case insensitive and multiline)
                                         Any match will add 'Custom' to the tags field
         -k, --path                  Search reg key path
         -t, --name                  Search value name
