@@ -72,7 +72,7 @@ Options:
         -v, --value                 Search reg value
 
     Network output:
-        -d, --destination <ip>      IP address to send output to [default: NONE]
+        -d, --destination <ip>      IP address to send output to [default: $^]
         -p, --port <port>           Destination port to send output to [default: 80]
 
     Misc:
