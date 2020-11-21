@@ -32,10 +32,10 @@ use regex::Regex;
     capture and report the line that the interesting string is found in
 */
 fn run_hunts(
-                    key: &str,
-                    value_name: &str,
-                    value: &str
-                ) -> std::io::Result<Results> 
+                key: &str,
+                value_name: &str,
+                value: &str
+            ) -> std::io::Result<Results> 
 {
     let mut t: Results = Results {result: false, tags: vec![]};
 
