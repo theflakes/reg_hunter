@@ -5,6 +5,10 @@
 
     I try to continue through all errors to allow the analysis to complete.
     But, no doubt, I missed some corner cases.
+
+    Compiling:
+        x32: cargo build --release --target i686-pc-windows-msvc
+        x64: cargo build --release --target x86_64-pc-windows-msvc
 */
 extern crate winreg;            // Windows registry access
 extern crate chrono;            // DateTime manipulation
@@ -494,7 +498,7 @@ fn find_mz_header(
 
     if value.windows(4).any(|s| matches!(s, [0x4D, 0x5A, 0x90, 0x00])) {
 			t.result = true;
-            t.tags.push("PossibleMzHeader".to_string());
+            t.tags.push("MzHeader".to_string());
 	}
 
     Ok(t)
