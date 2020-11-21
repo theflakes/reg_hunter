@@ -3,6 +3,7 @@ extern crate serde_derive;      // needed for json serialization
 extern crate serde_json;        // needed for json serialization
 extern crate docopt;
 extern crate whoami;
+extern crate chrono; 
 
 use std::collections::HashMap;
 use serde::Serialize;
@@ -11,6 +12,7 @@ use std::io::prelude::{Write};
 use docopt::Docopt;
 use std::thread;
 use std::env;
+use chrono::*;
 
 // do not like using "unwrap" here
 lazy_static! {
@@ -71,11 +73,12 @@ Reg Hunter
         If anyone chooses to use it, you accept all responsibility and liability.
 
 Usage:
+    reg_hunter --help
     reg_hunter [options]
     reg_hunter --explicit -f -n [--ip <ip> --port <port>]
     reg_hunter --all [-bcefimnorsuwyz] [--ip <ip> --port <port>] [--limit]
-    reg_hunter --help
     reg_hunter -a [-bn] [--regex <regex> [--path | --name | --value]]
+    reg_hunter -a -y [--start <start_time> --end <end_time>]
 
 Options:
     Registry context (one required):
@@ -101,7 +104,7 @@ Options:
         -m, --email                 Find email addresses
                                         Tag: Email
         -n, --null                  Hunt for null prefixed value names
-                                        Tag: Null
+                                        Tag: NullPrefixedName
         -o, --obfuscation           Find obfuscated values
                                         Tag: Obfuscation
         -r, --script                Find script files
@@ -117,10 +120,13 @@ Options:
                                         e.g. iex, invoke-expression, etc.
                                         Tag: Suspicious
 
-    Time window (NOT IMPLEMENTED YET):
-        This option will compare specified date window to the registry last_write_time
-        --start
-        --end
+    Time window:
+        This option will compare the specified date window to the registry last_write_time
+        and only output logs where the last_write_time falls within that window.
+        --start <UTC_start_time>        Start of time window: [default: 0000-01-01T00:00:00]
+                                        format: YYYY-MM-DDTHH:MM:SS
+        --end <UTC_end_time>            End of time window: [default: 9999-12-31T23:59:59]
+                                        format: YYYY-MM-DDTHH:MM:SS
 
     Custom hunt (regex required):
         -q, --regex <regex>         Custom regex [default: $^]
@@ -176,6 +182,10 @@ pub struct Args {
     pub flag_unc: bool,
     pub flag_url: bool,
 
+    // time window
+    pub flag_start: String,
+    pub flag_end: String,
+
     // custom regex search cmd line options
     pub flag_regex: String,
     pub flag_path: bool,
@@ -196,6 +206,8 @@ lazy_static! {
                     .unwrap_or_else(|e| e.exit());
 
     pub static ref CUSTOM_REGEX: String = format!("{}{}", "(?mi)".to_string(), ARGS.flag_regex);
+    pub static ref TIME_START: DateTime<Utc> = Utc.datetime_from_str(&ARGS.flag_start, "%Y-%m-%dT%H:%M:%S").unwrap();
+    pub static ref TIME_END: DateTime<Utc> = Utc.datetime_from_str(&ARGS.flag_end, "%Y-%m-%dT%H:%M:%S").unwrap();
 }
 
 

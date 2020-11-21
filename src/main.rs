@@ -286,18 +286,6 @@ fn print_value(
     Ok(())
 }
 
-// find registry key last write time
-fn get_reg_last_write_time(
-                            key: &RegKey
-                        ) -> Result<String, std::io::Error>    
-{
-    let info = key.query_info()?;
-    let ts = info.get_last_write_time_system();
-    let lwt = format!("{}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}", 
-        ts.wYear, ts.wMonth, ts.wDay, ts.wHour, ts.wMinute, ts.wSecond, ts.wMilliseconds);
-    Ok(lwt)
-}
-
 // get a single value from a reg key given a specific value name
 fn get_reg_value(
                     hive: &str, 
@@ -504,6 +492,18 @@ fn find_mz_header(
     Ok(t)
 }
 
+// find registry key last write time
+fn get_reg_last_write_time(
+                            key: &RegKey
+                        ) -> Result<String, std::io::Error>    
+{
+    let info = key.query_info()?;
+    let ts = info.get_last_write_time_system();
+    let lwt = format!("{}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}", 
+        ts.wYear, ts.wMonth, ts.wDay, ts.wHour, ts.wMinute, ts.wSecond, ts.wMilliseconds);
+    Ok(lwt)
+}
+
 fn examine_name_value(
                         hive_name: &str, 
                         hkey: &RegKey, 
@@ -514,6 +514,10 @@ fn examine_name_value(
                         already_seen: &mut Vec<String>
                     ) -> std::io::Result<()> 
 {
+    // check if last_write_time is in the examination time window
+    let lwt = get_reg_last_write_time(&hkey)?;
+    if !in_time_window(&lwt)? { return Ok(()) }
+
     let mut tags = vec![];
     
     let mz = find_mz_header(&value.bytes)?;
@@ -536,7 +540,6 @@ fn examine_name_value(
     }
 
     if always_print || mz.result || interesting.result || null.result {
-        let lwt = get_reg_last_write_time(&hkey)?;
         if null.result {
             tags.extend(null.tags);
         } else if mz.result {

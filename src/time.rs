@@ -1,26 +1,44 @@
 extern crate chrono;            // DateTime manipulation
 
+use std::io;
 
-use chrono::DateTime;
-use chrono::offset::Utc;
-
-
+use chrono::*;
+use io::Error;
+use crate::{data_defs::*};
 
 // get date into the format we need
 pub fn format_date(
                     time: DateTime::<Utc>
-                ) -> Result<String, std::io::Error>  
+                ) -> Result<String, Error>  
 {
     Ok(time.format("%Y-%m-%dT%H:%M:%S.%3f").to_string())
 }
 
 // get the current date time
-pub fn get_now() -> Result<String, std::io::Error>  {
+pub fn get_now() -> Result<String, Error>  {
     Ok(format_date(Utc::now())?)
 }
 
 // used to initialize a date time to epoch start
 pub fn get_epoch_start() -> String  
 {
-    "1970-01-01 00:00:00.000".to_string()
+    "1970-01-01T00:00:00.000".to_string()
+}
+
+// is the datetime within the time window we are examining?
+pub fn in_time_window(
+                    time: &str
+                ) -> Result<bool, Error>  
+{
+    // convert time for comparision to time window start and end
+    let t: DateTime<Utc> = match Utc.datetime_from_str(time, "%Y-%m-%dT%H:%M:%S.%3f") {
+        Ok(a) => a,
+        Err(_) => return Ok(false)
+    };
+
+    if TIME_START.le(&t) && TIME_END.ge(&t) {
+        Ok(true)
+    } else {
+        Ok(false)
+    }
 }
