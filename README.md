@@ -29,11 +29,12 @@ Reg Hunter
         If anyone chooses to use it, you accept all responsibility and liability.
 
 Usage:
+    reg_hunter --help
     reg_hunter [options]
     reg_hunter --explicit -f -n [--ip <ip> --port <port>]
     reg_hunter --all [-bcefimnorsuwyz] [--ip <ip> --port <port>] [--limit]
-    reg_hunter --help
     reg_hunter -a [-bn] [--regex <regex> [--path | --name | --value]]
+    reg_hunter -a -y [--start <start_time> --end <end_time>]
 
 Options:
     Registry context (one required):
@@ -44,35 +45,57 @@ Options:
 
     Hunts:
         -b, --binary                Find possible MZ headers in REG_BINARY values
+                                        Tag: MzHeader
         -c, --shell                 Find command shells (cmd.exe, powershell.exe, ...)
+                                        Tag: Shell
         -e, --encoding              Find possible encoded values
+                                        Tag: Encoding
         -f, --file                  Find files referenced in registry values
                                         and collect lnk/file metadata. If a lnk file is found,
                                         metadata on both the lnk and file it points to will be
                                         reported.
+                                        Tag: File
         -i, --ip                    Search for IPv4 addresses
+                                        Tag: IPv4
         -m, --email                 Find email addresses
+                                        Tag: Email
         -n, --null                  Hunt for null prefixed value names
+                                        Tag: NullPrefixedName
         -o, --obfuscation           Find obfuscated values
+                                        Tag: Obfuscation
         -r, --script                Find script files
+                                        Tag: Script
         -s, --shellcode             Find possible shellcode
+                                        Tag: Shellcode
         -u, --unc                   Find possible UNC paths
+                                        Tag: UNC
         -w, --url                   Find URLs
+                                        Tag: URL
         -y, --everything            Run ALL the hunts
         -z, --suspicious            Find various suspicious substrings
                                         e.g. iex, invoke-expression, etc.
+                                        Tag: Suspicious
+
+    Time window:
+        This option will compare the specified date window to the registry last_write_time
+        and only output logs where the last_write_time falls within that window.
+        --start <UTC_start_time>        Start of time window: [default: 0000-01-01T00:00:00]
+                                        format: YYYY-MM-DDTHH:MM:SS
+        --end <UTC_end_time>            End of time window: [default: 9999-12-31T23:59:59]
+                                        format: YYYY-MM-DDTHH:MM:SS
 
     Custom hunt (regex required):
         -q, --regex <regex>         Custom regex [default: $^]
                                         Does not support look aheads/behinds/...
                                         Uses Rust regex crate (case insensitive and multiline)
                                         Any match will add 'Custom' to the tags field
+                                        Tag: Custom
         -k, --path                  Search reg key path
         -t, --name                  Search value name
         -v, --value                 Search reg value
 
     Network output:
-        -d, --destination <ip>      IP address to send output to [default: $^]
+        -d, --destination <ip>      IP address to send output to [default: NONE]
         -p, --port <port>           Destination port to send output to [default: 80]
 
     Misc:
