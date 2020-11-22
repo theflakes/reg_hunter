@@ -42,6 +42,7 @@ Options:
                                         value names and values unless values are empty/null
 
     Hunts:
+        -b, --binary                Find possible MZ headers in REG_BINARY values
                                         Tag: MzHeader
         -c, --shell                 Find command shells (cmd.exe, powershell.exe, ...)
                                         Tag: Shell
