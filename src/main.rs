@@ -32,8 +32,7 @@ use regex::Regex;
 
 
 /*
-    regex's to find interesting strings
-    capture and report the line that the interesting string is found in
+    Run our hunts
 */
 fn run_hunts(
                 key: &str,
@@ -206,7 +205,7 @@ fn find_file(
 }
 
 /*
-    identify files being referenced in the file content 
+    identify files being referenced in registry values
     this is so we can harvest the metadata on these files as well
 */
 fn find_file_paths(

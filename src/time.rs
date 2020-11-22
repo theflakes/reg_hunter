@@ -25,18 +25,26 @@ pub fn get_epoch_start() -> String
     "1970-01-01T00:00:00.000".to_string()
 }
 
+// convert string to utc datetime
+pub fn to_utc_datetime(
+    time: &str
+) -> Result<DateTime::<Utc>, Error>  
+{
+    let _: DateTime<Utc> = match Utc.datetime_from_str(time, "%Y-%m-%dT%H:%M:%S.%3f") {
+        Ok(t) => return Ok(t),
+        Err(_) => return Ok(*TIME_END)
+    };
+}
+
 // is the datetime within the time window we are examining?
 pub fn in_time_window(
                     time: &str
                 ) -> Result<bool, Error>  
 {
     // convert time for comparision to time window start and end
-    let t: DateTime<Utc> = match Utc.datetime_from_str(time, "%Y-%m-%dT%H:%M:%S.%3f") {
-        Ok(a) => a,
-        Err(_) => return Ok(false)
-    };
+    let t = to_utc_datetime(time)?;
 
-    if TIME_START.le(&t) && TIME_END.ge(&t) {
+    if TIME_START.le(&t) && TIME_END.gt(&t) {
         Ok(true)
     } else {
         Ok(false)
