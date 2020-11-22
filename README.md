@@ -7,7 +7,7 @@ Thanks to https://github.com/lilopkins and https://github.com/gentoo90 for the L
 
 Output is in JSON line delimited.
 
-If you just want the tool, download the reg_hunter_x32.exe and/or reg_hunter_x64.exe binary. Note that you'll want to run the 64 bit binary on 64 bit OS so that it will not be partially blinded by Windows WOW64 redirection.
+If you just want the tool, download the reg_hunter_x32.exe and/or reg_hunter_x64.exe binary. Note that you'll want to run the 64 bit binary on a 64 bit OS so that it will not be partially blinded by Windows WOW64 redirection.
 
 Registry key "last_write_time" is included in Registry JSON logs.
 
