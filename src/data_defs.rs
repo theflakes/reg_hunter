@@ -124,7 +124,7 @@ Options:
         This option will compare the specified date window to the registry last_write_time
         and only output logs where the last_write_time falls within that window.
         Window start is inclusive, window end is exclusive. 
-        REMEMBER: key last_write_time can be timestomped.
+        NOTE: key last_write_time can be timestomped.
         --start <UTC_start_time>        Start of time window: [default: 0000-01-01T00:00:00]
                                         format: YYYY-MM-DDTHH:MM:SS
         --end <UTC_end_time>            End of time window: [default: 9999-12-31T23:59:59]
