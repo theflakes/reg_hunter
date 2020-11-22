@@ -24,21 +24,23 @@ Reg Hunter
     Author: Brian Kellogg
     License: MIT
     Many thanks: @Hexacorn and @SBousseaden
-    Disclaimer:
-        This tool comes with no warranty or support.
+    Disclaimer: 
+        This tool comes with no warranty or support. 
         If anyone chooses to use it, you accept all responsibility and liability.
 
 Usage:
     reg_hunter --help
     reg_hunter [options]
+    reg_hunter --explicit -f -n [--ip <ip> --port <port>]
     reg_hunter --all [-bcefimnorsuwyz] [--ip <ip> --port <port>] [--limit]
     reg_hunter -a [-bn] [--regex <regex> [--path | --name | --value]]
+    reg_hunter -a -y [--start <start_time> --end <end_time>]
 
 Options:
     Registry context (one required):
         -a, --all                   Examine all the registry; HKLM and HKU
         -x, --explicit              Examine only more often forensically interesting keys and values
-                                        This option will always report out all
+                                        This option will always report out all 
                                         value names and values unless values are empty/null
 
     Hunts:
@@ -48,9 +50,9 @@ Options:
                                         Tag: Shell
         -e, --encoding              Find possible encoded values
                                         Tag: Encoding
-        -f, --file                  Find files referenced in registry values
-                                        and collect lnk/file metadata. If a lnk file is found,
-                                        metadata on both the lnk and file it points to will be
+        -f, --file                  Find files referenced in registry values 
+                                        and collect lnk/file metadata. If a lnk file is found, 
+                                        metadata on both the lnk and file it points to will be 
                                         reported.
                                         Tag: File
         -i, --ip                    Search for IPv4 addresses
@@ -77,7 +79,7 @@ Options:
     Time window:
         This option will compare the specified date window to the registry last_write_time
         and only output logs where the last_write_time falls within that window.
-        Window start is inclusive, window end is exclusive.
+        Window start is inclusive, window end is exclusive. 
         NOTE: key last_write_time can be timestomped.
         --start <UTC_start_time>        Start of time window: [default: 0000-01-01T00:00:00]
                                         format: YYYY-MM-DDTHH:MM:SS
@@ -109,7 +111,7 @@ Note:
     there are some built in hunts; --null, --binary, ...
 
     Depending on the options used, considerable output can be generated.
-
+    
     To capture output remotely, start a netcat listener on your port of choice.
     Use the -k option with netcat to prevent netcat from closing after a TCP connection is closed.
 
