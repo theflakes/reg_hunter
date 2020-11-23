@@ -115,10 +115,10 @@ Options:
                                         Tag: UNC
         -w, --url                   Find URLs
                                         Tag: URL
-        -y, --everything            Run ALL the hunts
-        -z, --suspicious            Find various suspicious substrings
+        -y, --suspicious            Find various suspicious substrings
                                         e.g. iex, invoke-expression, etc.
                                         Tag: Suspicious
+        -z, --everything            Run ALL the hunts
 
     Time window:
         This option will compare the specified date window to the registry last_write_time
@@ -131,6 +131,8 @@ Options:
                                         format: YYYY-MM-DDTHH:MM:SS
 
     Custom hunt (regex required):
+        NOTE: A limitation is that only REG_BINARY values that can be 
+        successfully converted to a string will be searched.
         -q, --regex <regex>         Custom regex [default: $^]
                                         Does not support look aheads/behinds/...
                                         Uses Rust regex crate (case insensitive and multiline)

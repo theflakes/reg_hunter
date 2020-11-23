@@ -4,11 +4,14 @@ extern crate md5;
 extern crate lnk;
 
 
-use crate::{data_defs::*, mutate::*, process_file, time::*};
+use crate::{data_defs::*, mutate::*, time::*};
 use std::{fs::{self, File}, io::{self, BufRead, BufReader, Read}};
 use path_abs::{PathAbs, PathInfo};
 use lnk::{ShellLink};
 use std::os::windows::prelude::*;
+use std::{str, env};
+use regex::Regex;
+use regex::Captures;
 
 
 const MAX_FILE_SIZE: u64 = 256000000;
@@ -211,6 +214,138 @@ pub fn get_link_info(
                 arguments, hotkey)?;
 
     process_file("ShellLink", &path, already_seen)?;
+
+    Ok(())
+}
+
+// harvest a file's metadata
+pub fn process_file(
+                pdt: &str, 
+                file_path: &std::path::Path, 
+                already_seen: &mut Vec<String>
+            ) -> std::io::Result<()>
+{
+    let path = file_path.to_string_lossy();
+
+    if !file_path.exists() 
+        || !file_path.is_file() 
+        || already_seen.contains(&path.to_string()) 
+            { return Ok(()) }
+
+    already_seen.push(path.to_string());    // track files we've processed so we don't process them more than once
+    get_link_info(&pdt, file_path, already_seen)?;   // is this file a symlink? TRUE: get sysmlink info and path to linked file
+    let metadata = match fs::metadata(dunce::simplified(&file_path)) {
+        Ok(m) => m,
+        _ => return Ok(())
+    };
+    let mut ctime = get_epoch_start();
+    if metadata.created().is_ok() { 
+        ctime = format_date(metadata.created()?.to_owned().into())?;
+    }
+    let atime = format_date(metadata.accessed()?.to_owned().into())?;
+    let wtime = format_date(metadata.modified()?.to_owned().into())?;
+    let size = metadata.len();
+    let file = open_file(&file_path)?;
+    let (md5, mime_type) = match get_file_content_info(&file) {
+        Ok((m, t)) => (m, t),
+        _ => ("".to_string(), "".to_string())
+    };
+    drop(file); // close file handle immediately after not needed to avoid too many files open error
+
+    TxFile::new(pdt.to_string(), "File".to_string(), get_now()?, 
+                path.to_string(), md5, mime_type, atime, wtime, 
+                ctime, size, is_hidden(&file_path.to_path_buf())?).report_log();
+
+    Ok(())
+}
+
+/*
+    From: https://users.rust-lang.org/t/expand-win-env-var-in-string/50320/3
+*/
+pub fn expand_env_vars(
+                        s: &str
+                    ) -> std::io::Result<String>  
+{
+    lazy_static! {
+        static ref ENV_VAR: Regex = Regex::new("%([[:word:]]*)%")
+            .expect("Invalid Regex");
+    }
+    
+    let result: String = ENV_VAR.replace_all(s, |c:&Captures| match &c[1] {
+        "" => String::from("%"),
+        varname => match env::var(varname) {
+            Ok(v) => v,
+            _ => varname.to_string()
+        }.to_string()
+    }).into();
+
+    Ok(result)
+}
+
+/*
+    brute force way of finding files
+    can do better
+*/
+pub fn find_file(
+                        pdt: &str, 
+                        file_path: &std::path::Path,
+                        already_seen: &mut Vec<String>
+                    ) -> std::io::Result<()>
+{
+    lazy_static! {
+        static ref JUST_FILENAME: Regex = Regex::new(r#"(?mix)
+            ^[a-z0-9\x20_.$@!&\#%()^'\[\]+;~`{}=-]{1,255}\.[a-z][a-z0-9]{0,4}$
+        "#).expect("Invalid Regex");
+    }
+    let empty_string = "";
+    
+    let possible_path = &file_path.to_string_lossy().to_owned().to_lowercase();
+    let mut path: String = match expand_env_vars(&possible_path) {
+        Ok(p) => p,
+        _ => possible_path.to_string()
+    };
+
+    if JUST_FILENAME.is_match(&path) {
+        for s in SYSTEM_PATHS.iter() {
+            let p = &format!("{}{}{}", SYSTEM_DRIVE.to_string(), s, path);
+            process_file(pdt, &push_file_path(p, &empty_string), already_seen)?;
+        }
+    } else {
+        if path.starts_with("\\systemroot\\") {
+            path = path.replace("\\systemroot\\", &SYSTEM_ROOT.to_string());
+        } else if path.starts_with("system32\\") {
+            path = path.replace("system32\\", &format!("{}{}", SYSTEM_ROOT.to_string(), "system32\\"));
+        } else if path.starts_with("syswow64\\") {
+            path = path.replace("syswow64\\", &format!("{}{}", SYSTEM_ROOT.to_string(), "syswow64\\"));
+        } else if path.starts_with("sysnative\\") {
+            path = path.replace("sysnative\\", &format!("{}{}", SYSTEM_ROOT.to_string(), "sysnative\\"));
+        }
+        process_file(pdt, &push_file_path(&path, &empty_string), already_seen)?;
+
+        if path.contains("\\system32\\") {
+            process_file(pdt, 
+                &push_file_path(&path.replace("\\system32\\", "\\sysnative\\"), &empty_string), 
+                already_seen)?;
+        }
+
+        if path.contains("\\syswow64\\") {
+            process_file(pdt, 
+                &push_file_path(&path.replace("\\syswow64\\", "\\sysnative\\"), &empty_string), 
+                already_seen)?;
+        }
+
+        if path.contains("\\program files\\") {
+            process_file(pdt, 
+                &push_file_path(&path.replace("\\program files\\", "\\program files (x86)\\"), &empty_string), 
+                already_seen)?;
+        }
+
+        if path.contains("\\program files (x86)\\") {
+            process_file(pdt, 
+                &push_file_path(&path.replace("\\program files (x86)\\", "\\program files\\"), &empty_string), 
+                already_seen)?;
+        }
+    }
 
     Ok(())
 }

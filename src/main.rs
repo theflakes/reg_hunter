@@ -23,12 +23,10 @@ mod mutate;
 mod time;
 mod hunts;
 
-use regex::Captures;
-use {data_defs::*, file::*, time::*, mutate::*, hunts::*};
-use std::{io, fs, str, env};
+use {data_defs::*, time::*, mutate::*, hunts::*};
+use std::{io, str};
 use winreg::enums::*;
 use winreg::RegKey;
-use regex::Regex;
 
 
 /*
@@ -37,222 +35,71 @@ use regex::Regex;
 fn run_hunts(
                 key: &str,
                 value_name: &str,
-                value: &str
+                value: &str,
+                is_string: bool,    // was the reg value successfully converted to a string?
+                bytes: &Vec<u8>,
+                already_seen: &mut Vec<String>
             ) -> std::io::Result<Results> 
 {
     let mut t: Results = Results {result: false, tags: vec![]};
 
-    if (ARGS.flag_everything || ARGS.flag_email) && found_email(value)? 
-        { t.result = true; t.tags.push("Email".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_encoding) && found_encoding(value)? 
-        { t.result = true; t.tags.push("Encoding".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_ip) && found_ipv4(value)? 
-        { t.result = true; t.tags.push("IPv4".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_obfuscation) && found_obfuscation(value)? 
-        { t.result = true; t.tags.push("Obfuscation".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_script) && found_script(value)? 
-        { t.result = true; t.tags.push("Script".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_shell) && found_shell(value)? 
-        { t.result = true; t.tags.push("Shell".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_shellcode) && found_shellcode(value)? 
-        { t.result = true; t.tags.push("ShellCode".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_suspicious) && found_suspicious(value)?    
-        { t.result = true; t.tags.push("Suspicious".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_unc) && found_unc(value)? 
-        { t.result = true; t.tags.push("UNC".to_string()) }
-    if (ARGS.flag_everything || ARGS.flag_url) && found_url(value)? 
-        { t.result = true; t.tags.push("URL".to_string()) }
-
-    // custom regex cmd line hunt
-    if ARGS.flag_path || ARGS.flag_name || ARGS.flag_value {
-        if ARGS.flag_regex != "$^" && found_custom(key, value_name, value)? 
-            { t.result = true; t.tags.push("Custom".to_string()) }
+    if is_string {
+        if (ARGS.flag_everything || ARGS.flag_email) && found_email(value)? 
+            { t.result = true; t.tags.push("Email".to_string()) }
+        if (ARGS.flag_everything || ARGS.flag_encoding) && found_encoding(value)? 
+            { t.result = true; t.tags.push("Encoding".to_string()) }
+        if (ARGS.flag_everything || ARGS.flag_file) 
+            && found_file(&value.trim().trim_start_matches('"').trim_end_matches('"'), already_seen)?
+                { t.result = true; t.tags.push("File".to_string()) }
+        if (ARGS.flag_everything || ARGS.flag_ip) && found_ipv4(value)? 
+            { t.result = true; t.tags.push("IPv4".to_string()) }
+        if (ARGS.flag_everything || ARGS.flag_null) && found_null(value_name)?
+            { t.result = true; t.tags.push("NullPrefixedName".to_string()) }
+        if (ARGS.flag_everything || ARGS.flag_obfuscation) && found_obfuscation(value)? 
+            { t.result = true; t.tags.push("Obfuscation".to_string()) }
+        if (ARGS.flag_everything || ARGS.flag_script) && found_script(value)? 
+            { t.result = true; t.tags.push("Script".to_string()) }
+        if (ARGS.flag_everything || ARGS.flag_shell) && found_shell(value)? 
+            { t.result = true; t.tags.push("Shell".to_string()) }
+        if (ARGS.flag_everything || ARGS.flag_shellcode) && found_shellcode(value)? 
+            { t.result = true; t.tags.push("ShellCode".to_string()) }
+        if (ARGS.flag_everything || ARGS.flag_suspicious) && found_suspicious(value)?    
+            { t.result = true; t.tags.push("Suspicious".to_string()) }
+        if (ARGS.flag_everything || ARGS.flag_unc) && found_unc(value)? 
+            { t.result = true; t.tags.push("UNC".to_string()) }
+        if (ARGS.flag_everything || ARGS.flag_url) && found_url(value)? 
+            { t.result = true; t.tags.push("URL".to_string()) }
+        // custom regex cmd line hunts
+        if ARGS.flag_path || ARGS.flag_name || ARGS.flag_value {
+            if ARGS.flag_regex != "$^" && found_custom(key, value_name, value)? 
+                { t.result = true; t.tags.push("Custom".to_string()) }
+        }
+    } else {    // still want to run any custom hunt on path and value name
+        if ARGS.flag_path || ARGS.flag_name {
+            if ARGS.flag_regex != "$^" && found_custom(key, value_name, "")? 
+                { t.result = true; t.tags.push("Custom".to_string()) }
+        }
     }
+
+    // binary search
+    if (ARGS.flag_everything || ARGS.flag_binary) 
+        && found_hex(bytes, &[0x4D, 0x5A, 0x90, 0x00].to_vec())? 
+            { t.result = true; t.tags.push("MzHeader".to_string()) }
     
     Ok(t)
-}
-
-// harvest a file's metadata
-pub fn process_file(
-                pdt: &str, 
-                file_path: &std::path::Path, 
-                already_seen: &mut Vec<String>
-            ) -> std::io::Result<()>
-{
-    let path = file_path.to_string_lossy();
-
-    if !file_path.exists() 
-        || !file_path.is_file() 
-        || already_seen.contains(&path.to_string()) 
-            { return Ok(()) }
-
-    already_seen.push(path.to_string());    // track files we've processed so we don't process them more than once
-    get_link_info(&pdt, file_path, already_seen)?;   // is this file a symlink? TRUE: get sysmlink info and path to linked file
-    let metadata = match fs::metadata(dunce::simplified(&file_path)) {
-        Ok(m) => m,
-        _ => return Ok(())
-    };
-    let mut ctime = get_epoch_start();
-    if metadata.created().is_ok() { 
-        ctime = format_date(metadata.created()?.to_owned().into())?;
-    }
-    let atime = format_date(metadata.accessed()?.to_owned().into())?;
-    let wtime = format_date(metadata.modified()?.to_owned().into())?;
-    let size = metadata.len();
-    let file = open_file(&file_path)?;
-    let (md5, mime_type) = match get_file_content_info(&file) {
-        Ok((m, t)) => (m, t),
-        _ => ("".to_string(), "".to_string())
-    };
-    drop(file); // close file handle immediately after not needed to avoid too many files open error
-
-    TxFile::new(pdt.to_string(), "File".to_string(), get_now()?, 
-                path.to_string(), md5, mime_type, atime, wtime, 
-                ctime, size, is_hidden(&file_path.to_path_buf())?).report_log();
-
-    Ok(())
-}
-
-/*
-    From: https://users.rust-lang.org/t/expand-win-env-var-in-string/50320/3
-*/
-pub fn expand_env_vars(
-                        s: &str
-                    ) -> std::io::Result<String>  
-{
-    lazy_static! {
-        static ref ENV_VAR: Regex = Regex::new("%([[:word:]]*)%")
-            .expect("Invalid Regex");
-    }
-    
-    let result: String = ENV_VAR.replace_all(s, |c:&Captures| match &c[1] {
-        "" => String::from("%"),
-        varname => match env::var(varname) {
-            Ok(v) => v,
-            _ => varname.to_string()
-        }.to_string()
-    }).into();
-
-    Ok(result)
-}
-
-/*
-    brute force way of finding files
-    can do better
-*/
-fn find_file(
-                        pdt: &str, 
-                        file_path: &std::path::Path,
-                        already_seen: &mut Vec<String>
-                    ) -> std::io::Result<()>
-{
-    lazy_static! {
-        static ref JUST_FILENAME: Regex = Regex::new(r#"(?mix)
-            ^[a-z0-9\x20_.$@!&\#%()^'\[\]+;~`{}=-]{1,255}\.[a-z][a-z0-9]{0,4}$
-        "#).expect("Invalid Regex");
-    }
-    let empty_string = "";
-    
-    let possible_path = &file_path.to_string_lossy().to_owned().to_lowercase();
-    let mut path: String = match expand_env_vars(&possible_path) {
-        Ok(p) => p,
-        _ => possible_path.to_string()
-    };
-
-    if JUST_FILENAME.is_match(&path) {
-        for s in SYSTEM_PATHS.iter() {
-            let p = &format!("{}{}{}", SYSTEM_DRIVE.to_string(), s, path);
-            process_file(pdt, &push_file_path(p, &empty_string), already_seen)?;
-        }
-    } else {
-        if path.starts_with("\\systemroot\\") {
-            path = path.replace("\\systemroot\\", &SYSTEM_ROOT.to_string());
-        } else if path.starts_with("system32\\") {
-            path = path.replace("system32\\", &format!("{}{}", SYSTEM_ROOT.to_string(), "system32\\"));
-        } else if path.starts_with("syswow64\\") {
-            path = path.replace("syswow64\\", &format!("{}{}", SYSTEM_ROOT.to_string(), "syswow64\\"));
-        } else if path.starts_with("sysnative\\") {
-            path = path.replace("sysnative\\", &format!("{}{}", SYSTEM_ROOT.to_string(), "sysnative\\"));
-        }
-        process_file(pdt, &push_file_path(&path, &empty_string), already_seen)?;
-
-        if path.contains("\\system32\\") {
-            process_file(pdt, 
-                &push_file_path(&path.replace("\\system32\\", "\\sysnative\\"), &empty_string), 
-                already_seen)?;
-        }
-
-        if path.contains("\\syswow64\\") {
-            process_file(pdt, 
-                &push_file_path(&path.replace("\\syswow64\\", "\\sysnative\\"), &empty_string), 
-                already_seen)?;
-        }
-
-        if path.contains("\\program files\\") {
-            process_file(pdt, 
-                &push_file_path(&path.replace("\\program files\\", "\\program files (x86)\\"), &empty_string), 
-                already_seen)?;
-        }
-
-        if path.contains("\\program files (x86)\\") {
-            process_file(pdt, 
-                &push_file_path(&path.replace("\\program files (x86)\\", "\\program files\\"), &empty_string), 
-                already_seen)?;
-        }
-    }
-
-    Ok(())
-}
-
-/*
-    identify files being referenced in registry values
-    this is so we can harvest the metadata on these files as well
-*/
-fn find_file_paths(
-                    text: &str, 
-                    already_seen: 
-                    &mut Vec<String>
-                ) -> std::io::Result<bool> 
-{
-    if !ARGS.flag_everything && !ARGS.flag_file { return Ok(false); }
-
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r#"(?mix)
-            (
-                # file path
-                (?:[a-z]:|%\S+%)\\(?:[a-z0-9\x20_.$@!&\#%()^',\[\]+;~`{}=-]{1,255}\\)*[a-z0-9\x20_.$@!&\#%()^',\[\]+;~`{}=-]{1,255}\.[a-z0-9]{1,5}|
-                # partial path
-                ^\\?(?:System32|Syswow64|SystemRoot)\\[a-z0-9\x20_.$@!&\#%()^',\[\]+;~`{}=-]{1,255}\.[a-z0-9]{1,5}|
-                # just a file name
-                ^[a-z0-9\x20_.$!&\#%()^'\[\]+;~`{}=-]{1,255}\.[a-z][a-z0-9]{0,4}$
-            )
-        "#).expect("Invalid Regex");
-    }
-    
-    let mut result = false;
-    for c in RE.captures_iter(text) {
-        result = true;
-        let path = std::path::Path::new(&c[1]);
-        find_file("Registry", path, already_seen)?;
-    }
-    
-    Ok(result)
 }
 
 fn find_interesting_stuff(
                             key: &str,
                             value_name: &str,
                             value: &str,
+                            is_string: bool,    // was the reg value successfully converted to a string?
+                            bytes: &Vec<u8>,
                             already_seen: &mut Vec<String>
                         )  -> std::io::Result<Results> {
-    let found_path = find_file_paths(&value.trim().trim_start_matches('"').trim_end_matches('"'), already_seen)?;
-    let found_interesting = run_hunts(&key, &value_name, &value)?;
+    let found_interesting = run_hunts(&key, &value_name, &value, is_string, bytes, already_seen)?;
 
     let mut t: Results = Results {result: false, tags: vec![]};
-    if found_path {
-        t.result = true;
-        t.tags.push("File".to_string());
-    } 
     if found_interesting.result {
         t.result = true;
         t.tags.extend(found_interesting.tags);
@@ -312,6 +159,7 @@ fn get_reg_values(
                     hive: &str, 
                     hkey: &RegKey, 
                     key: &str, 
+                    key_path: &str,
                     always_print: bool,
                     already_seen: &mut Vec<String>
                 ) -> std::io::Result<()> 
@@ -322,7 +170,7 @@ fn get_reg_values(
     };
     for value_result in s.enum_values() {
         let _ = match value_result {
-            Ok((n, v)) => examine_name_value(hive, &s, key, &n, &v, always_print, already_seen)?,
+            Ok((n, v)) => examine_name_value(hive, &s, key_path, &n, &v, always_print, already_seen)?,
             _ => continue, 
         };
     }
@@ -339,7 +187,7 @@ fn harvest_reg_key(
                 ) -> std::io::Result<()> 
 {
     if std::vec::Vec::is_empty(values) {
-        get_reg_values(hive, hkey, key, true, already_seen)?;
+        get_reg_values(hive, hkey, key, key,  true, already_seen)?;
     } else {
         get_reg_value(hive, hkey, key, values, already_seen)?;
     }
@@ -475,22 +323,6 @@ fn process_interesting_hku(
     Ok(())
 }
 
-// find possible PE MZ header: 4d 5a 90 00
-fn find_mz_header(
-                    value: &Vec<u8>
-                ) -> std::io::Result<Results> 
-{
-    let mut t: Results = Results {result: false, tags: vec![]};
-    if (!ARGS.flag_everything && !ARGS.flag_binary) || value.len() < 32 { return Ok(t) }
-
-    if value.windows(4).any(|s| matches!(s, [0x4D, 0x5A, 0x90, 0x00])) {
-			t.result = true;
-            t.tags.push("MzHeader".to_string());
-	}
-
-    Ok(t)
-}
-
 // find registry key last write time
 fn get_reg_last_write_time(
                             key: &RegKey
@@ -518,8 +350,6 @@ fn examine_name_value(
     if !in_time_window(&lwt)? { return Ok(()) }
 
     let mut tags = vec![];
-    
-    let mz = find_mz_header(&value.bytes)?;
 
     /* 
         convert value to string, if conversion fails create an array of bytes
@@ -528,22 +358,13 @@ fn examine_name_value(
     let (converted, v) = value_to_string(&value.bytes)?;
     let mut interesting = Results {result: false, tags: vec![]};
     if converted {
-        interesting = find_interesting_stuff(&key,&name,&v, already_seen)?;
+        interesting = find_interesting_stuff(&key,&name,&v, true, &value.bytes, already_seen)?;
+    } else if ARGS.flag_binary {
+        interesting = find_interesting_stuff(&key,&name,&v, false, &value.bytes, already_seen)?;
     }
 
-    // Null prefixed value names are an evasion/obfuscation tactic
-    let mut null: Results = Results {result: false, tags: vec![]};
-    if (ARGS.flag_everything || ARGS.flag_null) && name.starts_with('\u{0000}') {
-        null.result = true;
-        null.tags = vec!["NullPrefixedName".to_string()];
-    }
-
-    if always_print || mz.result || interesting.result || null.result {
-        if null.result {
-            tags.extend(null.tags);
-        } else if mz.result {
-            tags.extend(mz.tags);
-        } else if interesting.result {
+    if always_print || interesting.result {
+        if interesting.result {
             tags.extend(interesting.tags);
         }
         print_value("", "Registry", hive_name, key, name.to_string(), &v, format!("{:?}", value.vtype), &lwt, tags)?;
@@ -561,11 +382,13 @@ fn search_all_value_names(
 {
     let keys = get_sub_keys(&hkey)?;
     for k in keys {
-        let mut reg_key: String = k.to_string();
-        if ! key.is_empty() { reg_key = format!("{}\\{}", key, &reg_key); }
-        get_reg_values(hive, hkey, &k, false, already_seen)?;
+        let mut key_path: String = k.to_string();
+        if !key.is_empty() { 
+            key_path = format!("{}\\{}", key, key_path); 
+        }
+        get_reg_values(hive, hkey, &k, &key_path, false, already_seen)?;
         let _ = match hkey.open_subkey(&k) {
-            Ok(n) => search_all_value_names(hive, &n, &reg_key, already_seen)?,
+            Ok(n) => search_all_value_names(hive, &n, &key_path, already_seen)?,
             _ => continue,
         };
     }
@@ -578,7 +401,7 @@ fn main() -> io::Result<()>
 
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
     let hku = RegKey::predef(HKEY_USERS);
-    let empty_string = "".to_string();
+    let empty_string = String::new();
 
     // print help screen if no options specified
     if !(ARGS.flag_explicit || ARGS.flag_all) {

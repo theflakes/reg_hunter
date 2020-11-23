@@ -1,10 +1,12 @@
 extern crate winreg;            // Windows registry access
 extern crate chrono;            // DateTime manipulation
 extern crate regex;
+extern crate bstr;
 
 use regex::Regex;
-use crate::{data_defs::*};
-use std::{str};
+use crate::{data_defs::*, file::*};
+use std::{io::Result, str};
+use bstr::ByteSlice;
 
 /* 
         use \x20 for matching spaces when using "x" directive that doesn't allow spaces in regex
@@ -20,7 +22,7 @@ pub fn found_custom(
                 key: &str,
                 value_name: &str,
                 value: &str
-            ) -> std::io::Result<bool> 
+            ) -> Result<bool> 
 {   
     lazy_static! {
         static ref CUSTOM: Regex = Regex::new(&CUSTOM_REGEX).expect("Invalid Regex");
@@ -38,7 +40,7 @@ pub fn found_custom(
 
 pub fn found_email(
                 text: &str
-            ) -> std::io::Result<bool> 
+            ) -> Result<bool> 
 {
     lazy_static! {
         static ref EMAIL: Regex = Regex::new(r#"(?mix)
@@ -54,7 +56,7 @@ pub fn found_email(
 
 pub fn found_encoding(
                 text: &str
-            ) -> std::io::Result<bool> 
+            ) -> Result<bool> 
 {
     lazy_static! {
         static ref ENCODING: Regex = Regex::new(r#"(?mix)
@@ -67,10 +69,57 @@ pub fn found_encoding(
     if ENCODING.is_match(text) { Ok(true) } else { Ok(false) }
 }
 
+pub fn found_hex(
+                    bytes: &Vec<u8>,
+                    find_this: &Vec<u8>
+                ) -> Result<bool> 
+{
+    if bytes.find(find_this).is_some() {
+        Ok(true)
+	} else {
+        Ok(false)
+    }
+}
+
+/*
+    identify files being referenced in registry values
+    this is so we can harvest the metadata on these files as well
+*/
+pub fn found_file(
+                    text: &str, 
+                    already_seen: 
+                    &mut Vec<String>
+                ) -> std::io::Result<bool> 
+{
+    if !ARGS.flag_everything && !ARGS.flag_file { return Ok(false); }
+
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r#"(?mix)
+            (
+                # file path
+                (?:[a-z]:|%\S+%)\\(?:[a-z0-9\x20_.$@!&\#%()^',\[\]+;~`{}=-]{1,255}\\)*[a-z0-9\x20_.$@!&\#%()^',\[\]+;~`{}=-]{1,255}\.[a-z0-9]{1,5}|
+                # partial path
+                ^\\?(?:System32|Syswow64|SystemRoot)\\[a-z0-9\x20_.$@!&\#%()^',\[\]+;~`{}=-]{1,255}\.[a-z0-9]{1,5}|
+                # just a file name
+                ^[a-z0-9\x20_.$!&\#%()^'\[\]+;~`{}=-]{1,255}\.[a-z][a-z0-9]{0,4}$
+            )
+        "#).expect("Invalid Regex");
+    }
+    
+    let mut result = false;
+    for c in RE.captures_iter(text) {
+        result = true;
+        let path = std::path::Path::new(&c[1]);
+        find_file("Registry", path, already_seen)?;
+    }
+    
+    Ok(result)
+}
+
 
 pub fn found_ipv4(
                 text: &str
-            ) -> std::io::Result<bool> 
+            ) -> Result<bool> 
 {
     lazy_static! {
         static ref IPV4: Regex = Regex::new(r#"(?mix)
@@ -86,10 +135,21 @@ pub fn found_ipv4(
     if IPV4.is_match(text) { Ok(true) } else { Ok(false) }
 }
 
+pub fn found_null(
+                    value_name: &str
+                ) -> Result<bool>
+{
+    if value_name.starts_with('\u{0000}') {
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
+
 
 pub fn found_obfuscation(
                 text: &str
-            ) -> std::io::Result<bool> 
+            ) -> Result<bool> 
 {
     lazy_static! {
         static ref OBFUSCATION: Regex = Regex::new(r#"(?mix)
@@ -115,7 +175,7 @@ pub fn found_obfuscation(
 
 pub fn found_script(
                 text: &str
-            ) -> std::io::Result<bool> 
+            ) -> Result<bool> 
 {
     lazy_static! {
         static ref SCRIPT: Regex = Regex::new(r#"(?mix)
@@ -136,7 +196,7 @@ pub fn found_script(
 
 pub fn found_shell(
                 text: &str
-            ) -> std::io::Result<bool> 
+            ) -> Result<bool> 
 {
     lazy_static! {
         static ref SHELL: Regex = Regex::new(r#"(?mix)
@@ -153,7 +213,7 @@ pub fn found_shell(
 
 pub fn found_shellcode(
                 text: &str
-            ) -> std::io::Result<bool> 
+            ) -> Result<bool> 
 {
     lazy_static! {
         static ref SHELL_CODE: Regex = Regex::new(r#"(?mix)
@@ -173,7 +233,7 @@ pub fn found_shellcode(
 */
 pub fn found_suspicious(
                 text: &str
-            ) -> std::io::Result<bool> 
+            ) -> Result<bool> 
 {
     lazy_static! {
         static ref SUSPICIOUS: Regex = Regex::new(r#"(?mix)
@@ -384,7 +444,7 @@ pub fn found_suspicious(
 
 pub fn found_unc(
                 text: &str
-            ) -> std::io::Result<bool> 
+            ) -> Result<bool> 
 {
     lazy_static! {
         static ref UNC: Regex = Regex::new(r#"(?mix)
@@ -400,7 +460,7 @@ pub fn found_unc(
 
 pub fn found_url(
                 text: &str
-            ) -> std::io::Result<bool> 
+            ) -> Result<bool> 
 {
     lazy_static! {
         static ref URL: Regex = Regex::new(r#"(?mix)

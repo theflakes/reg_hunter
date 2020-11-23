@@ -27,8 +27,8 @@ pub fn get_epoch_start() -> String
 
 // convert string to utc datetime
 pub fn to_utc_datetime(
-    time: &str
-) -> Result<DateTime::<Utc>, Error>  
+                        time: &str
+                    ) -> Result<DateTime::<Utc>, Error>  
 {
     let _: DateTime<Utc> = match Utc.datetime_from_str(time, "%Y-%m-%dT%H:%M:%S.%3f") {
         Ok(t) => return Ok(t),

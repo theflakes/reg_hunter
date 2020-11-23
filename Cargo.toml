@@ -20,6 +20,7 @@ overflow-checks = false
 
 [dependencies]
 arrayvec = "0.5.2"
+bstr = "0.2.14"
 chrono = "0.4.19"
 docopt = "1.1.0"
 dunce = "1.0.1"
