@@ -70,22 +70,26 @@ fn run_hunts(
         if (ARGS.flag_everything || ARGS.flag_url) && found_url(value)? 
             { t.result = true; t.tags.push("URL".to_string()) }
         // custom regex cmd line hunts
-        if ARGS.flag_path || ARGS.flag_name || ARGS.flag_value {
-            if ARGS.flag_regex != "$^" && found_custom(key, value_name, value)? 
-                { t.result = true; t.tags.push("Custom".to_string()) }
-        }
-    } else {    // still want to run any custom hunt on path and value name
-        if ARGS.flag_path || ARGS.flag_name {
-            if ARGS.flag_regex != "$^" && found_custom(key, value_name, "")? 
-                { t.result = true; t.tags.push("Custom".to_string()) }
-        }
+        if (ARGS.flag_path && found_regex(key)?) 
+            || (ARGS.flag_name && found_regex(value_name)?) 
+            || (ARGS.flag_value && found_regex(value)?) 
+                { t.result = true; t.tags.push("Regex".to_string()) }
+    } else {    // still want to run any custom hunt on path and value names if value conversion to string fails
+        if (ARGS.flag_path && found_regex(key)?) 
+            || (ARGS.flag_name && found_regex(value_name)?) 
+                { t.result = true; t.tags.push("Regex".to_string()) }
     }
 
-    // binary search
+    // binary searches
     if (ARGS.flag_everything || ARGS.flag_binary) 
         && found_hex(bytes, &[0x4D, 0x5A, 0x90, 0x00].to_vec())? 
             { t.result = true; t.tags.push("MzHeader".to_string()) }
     
+    if (ARGS.flag_path && found_hex(&key.as_bytes().to_vec(), &FIND_HEX)?) 
+        || (ARGS.flag_name && found_hex(&value_name.as_bytes().to_vec(), &FIND_HEX)?) 
+        || (ARGS.flag_value && found_hex(&bytes, &FIND_HEX)?) 
+            { t.result = true; t.tags.push("Hex".to_string()) }
+
     Ok(t)
 }
 

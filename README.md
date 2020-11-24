@@ -19,13 +19,17 @@ NOTE: The "parent_data_type" field specifies the "data_type" that caused the gen
 
 A file/lnk's meta data will only be collected once no matter how many times it is referenced in registry values.
 
+To compile; install Rust and the MSVC 32 and/or 64 bit environment.
+    x32: cargo build --release --target i686-pc-windows-msvc
+    x64: cargo build --release --target x86_64-pc-windows-msvc
+
 ```
 Reg Hunter
     Author: Brian Kellogg
     License: MIT
     Many thanks: @Hexacorn and @SBousseaden
-    Disclaimer:
-        This tool comes with no warranty or support.
+    Disclaimer: 
+        This tool comes with no warranty or support. 
         If anyone chooses to use it, you accept all responsibility and liability.
 
 Usage:
@@ -33,13 +37,14 @@ Usage:
     reg_hunter [options]
     reg_hunter --explicit -f -n [--ip <ip> --port <port>]
     reg_hunter --all [-bcefimnorsuwyz] [--ip <ip> --port <port>] [--limit]
+    reg_hunter -a [-bn] [--regex <regex> [--path | --name | --value]]
     reg_hunter -a -y [--start <start_time> --end <end_time>]
 
 Options:
     Registry context (one required):
         -a, --all                   Examine all the registry; HKLM and HKU
         -x, --explicit              Examine only more often forensically interesting keys and values
-                                        This option will always report out all
+                                        This option will always report out all 
                                         value names and values unless values are empty/null
 
     Hunts:
@@ -49,9 +54,9 @@ Options:
                                         Tag: Shell
         -e, --encoding              Find possible encoded values
                                         Tag: Encoding
-        -f, --file                  Find files referenced in registry values
-                                        and collect lnk/file metadata. If a lnk file is found,
-                                        metadata on both the lnk and file it points to will be
+        -f, --file                  Find files referenced in registry values 
+                                        and collect lnk/file metadata. If a lnk file is found, 
+                                        metadata on both the lnk and file it points to will be 
                                         reported.
                                         Tag: File
         -i, --ip                    Search for IPv4 addresses
@@ -78,24 +83,31 @@ Options:
     Time window:
         This option will compare the specified date window to the registry last_write_time
         and only output logs where the last_write_time falls within that window.
-        Window start is inclusive, window end is exclusive.
+        Window start is inclusive, window end is exclusive. 
         NOTE: key last_write_time can be timestomped.
         --start <UTC_start_time>        Start of time window: [default: 0000-01-01T00:00:00]
                                         format: YYYY-MM-DDTHH:MM:SS
         --end <UTC_end_time>            End of time window: [default: 9999-12-31T23:59:59]
                                         format: YYYY-MM-DDTHH:MM:SS
 
-    Custom hunt (regex required):
-        NOTE: A limitation is that only REG_BINARY values that can be
+    Custom hunts (regex and/or hex required):
+        NOTE: A limitation is that only REG_BINARY values that can be 
         successfully converted to a string will be searched.
         -q, --regex <regex>         Custom regex [default: $^]
                                         Does not support look aheads/behinds/...
                                         Uses Rust regex crate (case insensitive and multiline)
                                         Any match will add 'Custom' to the tags field
-                                        Tag: Custom
+                                        Tag: Regex
+        --hex <string>              Hex search string [default: 00]
+                                        format: 0a1b2c3d4e5f
+                                        Tag: Hex
         -k, --path                  Search reg key path
         -t, --name                  Search value name
         -v, --value                 Search reg value
+    
+    Hex hunt:
+        Hunts all values for a given hex string
+        
 
     Network output:
         -d, --destination <ip>      IP address to send output to [default: NONE]
@@ -112,7 +124,7 @@ Note:
     there are some built in hunts; --null, --binary, ...
 
     Depending on the options used, considerable output can be generated.
-
+    
     To capture output remotely, start a netcat listener on your port of choice.
     Use the -k option with netcat to prevent netcat from closing after a TCP connection is closed.
 

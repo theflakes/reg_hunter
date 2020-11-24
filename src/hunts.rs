@@ -16,28 +16,6 @@ use bstr::ByteSlice;
             (?:$|\s|[/:@#&\(\]|=\\\}'\"><])
 */
 
-// Custom regex hunt specified on command line
-//ARGS.flag_path || ARGS.flag_name || ARGS.flag_value
-pub fn found_custom(
-                key: &str,
-                value_name: &str,
-                value: &str
-            ) -> Result<bool> 
-{   
-    lazy_static! {
-        static ref CUSTOM: Regex = Regex::new(&CUSTOM_REGEX).expect("Invalid Regex");
-    }
-
-    if (ARGS.flag_path && CUSTOM.is_match(key)) 
-        || (ARGS.flag_name && CUSTOM.is_match(value_name)) 
-        || (ARGS.flag_value && CUSTOM.is_match(value)) { 
-            Ok(true) 
-        } else { 
-            Ok(false) 
-        }
-}
-
-
 pub fn found_email(
                 text: &str
             ) -> Result<bool> 
@@ -67,18 +45,6 @@ pub fn found_encoding(
     }
 
     if ENCODING.is_match(text) { Ok(true) } else { Ok(false) }
-}
-
-pub fn found_hex(
-                    bytes: &Vec<u8>,
-                    find_this: &Vec<u8>
-                ) -> Result<bool> 
-{
-    if bytes.find(find_this).is_some() {
-        Ok(true)
-	} else {
-        Ok(false)
-    }
 }
 
 /*
@@ -114,6 +80,18 @@ pub fn found_file(
     }
     
     Ok(result)
+}
+
+pub fn found_hex(
+                    bytes: &Vec<u8>,
+                    find_this: &Vec<u8>
+                ) -> Result<bool> 
+{
+    if find_this != &[0] && bytes.find(find_this).is_some() {
+        Ok(true)
+	} else {
+        Ok(false)
+    }
 }
 
 
@@ -170,6 +148,19 @@ pub fn found_obfuscation(
     }
 
     if OBFUSCATION.is_match(text) { Ok(true) } else { Ok(false) }
+}
+
+// Custom regex hunt specified on command line
+//ARGS.flag_path || ARGS.flag_name || ARGS.flag_value
+pub fn found_regex(
+                text: &str
+            ) -> Result<bool> 
+{   
+    if ARGS.flag_regex != "$^" && CUSTOM_REGEX.is_match(text) { 
+            Ok(true) 
+        } else { 
+            Ok(false) 
+        }
 }
 
 

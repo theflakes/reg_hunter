@@ -3,7 +3,9 @@ extern crate serde_derive;      // needed for json serialization
 extern crate serde_json;        // needed for json serialization
 extern crate docopt;
 extern crate whoami;
-extern crate chrono; 
+extern crate chrono;
+
+use crate::mutate::hex_to_bytes;
 
 use std::collections::HashMap;
 use serde::Serialize;
@@ -13,6 +15,7 @@ use docopt::Docopt;
 use std::thread;
 use std::env;
 use chrono::*;
+use regex::Regex;
 
 // do not like using "unwrap" here
 lazy_static! {
@@ -27,40 +30,40 @@ lazy_static! {
 // where to search for files
 pub const SYSTEM_PATHS: [&str; 35] = [
     "",
+    "$recycle.bin\\",
     "boot\\",
     "perflogs\\",
-    "$recycle.bin\\",
-    "windows\\",
-    "windows\\apppatch\\",
-    "windows\\inf\\",
-    "windows\\system32\\",
-    "windows\\syswow64\\",
-    "windows\\sysnative\\",
-    "windows\\system32\\wbem\\",
-    "windows\\syswow64\\wbem\\",
-    "windows\\sysnative\\wbem\\",
-    "windows\\system32\\web\\",
-    "windows\\syswow64\\web\\",
-    "windows\\sysnative\\web\\",
-    "windows\\system32\\sysprep\\",
-    "windows\\syswow64\\sysprep\\",
-    "windows\\sysnative\\sysprep\\",
-    "windows\\system32\\grouppolicy\\machine\\scripts\\startup\\",
-    "windows\\syswow64\\grouppolicy\\machine\\scripts\\startup\\",
-    "windows\\sysnative\\grouppolicy\\machine\\scripts\\startup\\",
-    "windows\\system32\\windowspowershell\\v1.0\\",
-    "windows\\syswow64\\windowspowershell\\v1.0\\",
-    "windows\\sysnative\\windowspowershell\\v1.0\\",
-    "windows\\system32\\drivers\\",
-    "windows\\syswow64\\drivers\\",
-    "windows\\sysnative\\drivers\\",
-    "windows\\temp\\",
     "programdata\\",
     "temp\\",
     "users\\",
-    "users\\public\\",
+    "users\\desktop\\",
     "users\\documents\\",
-    "users\\desktop\\"
+    "users\\public\\",
+    "windows\\",
+    "windows\\apppatch\\",
+    "windows\\inf\\",
+    "windows\\sysnative\\",
+    "windows\\sysnative\\drivers\\",
+    "windows\\sysnative\\grouppolicy\\machine\\scripts\\startup\\",
+    "windows\\sysnative\\sysprep\\",
+    "windows\\sysnative\\wbem\\",
+    "windows\\sysnative\\web\\",
+    "windows\\sysnative\\windowspowershell\\v1.0\\",
+    "windows\\system32\\",
+    "windows\\system32\\drivers\\",
+    "windows\\system32\\grouppolicy\\machine\\scripts\\startup\\",
+    "windows\\system32\\sysprep\\",
+    "windows\\system32\\wbem\\",
+    "windows\\system32\\web\\",
+    "windows\\system32\\windowspowershell\\v1.0\\",
+    "windows\\syswow64\\",
+    "windows\\syswow64\\drivers\\",
+    "windows\\syswow64\\grouppolicy\\machine\\scripts\\startup\\",
+    "windows\\syswow64\\sysprep\\",
+    "windows\\syswow64\\wbem\\",
+    "windows\\syswow64\\web\\",
+    "windows\\syswow64\\windowspowershell\\v1.0\\",
+    "windows\\temp\\",
 ];
 
 pub const USAGE: &'static str = "
@@ -130,17 +133,24 @@ Options:
         --end <UTC_end_time>            End of time window: [default: 9999-12-31T23:59:59]
                                         format: YYYY-MM-DDTHH:MM:SS
 
-    Custom hunt (regex required):
+    Custom hunts (regex and/or hex required):
         NOTE: A limitation is that only REG_BINARY values that can be 
         successfully converted to a string will be searched.
         -q, --regex <regex>         Custom regex [default: $^]
                                         Does not support look aheads/behinds/...
                                         Uses Rust regex crate (case insensitive and multiline)
                                         Any match will add 'Custom' to the tags field
-                                        Tag: Custom
+                                        Tag: Regex
+        --hex <string>              Hex search string [default: 00]
+                                        format: 0a1b2c3d4e5f
+                                        Tag: Hex
         -k, --path                  Search reg key path
         -t, --name                  Search value name
         -v, --value                 Search reg value
+    
+    Hex hunt:
+        Hunts all values for a given hex string
+        
 
     Network output:
         -d, --destination <ip>      IP address to send output to [default: NONE]
@@ -195,6 +205,7 @@ pub struct Args {
     pub flag_path: bool,
     pub flag_name: bool,
     pub flag_value: bool,
+    pub flag_hex: String,
 
     // cmd line options for network output
     pub flag_destination: String,
@@ -209,9 +220,10 @@ lazy_static! {
                     .and_then(|d| d.deserialize())
                     .unwrap_or_else(|e| e.exit());
 
-    pub static ref CUSTOM_REGEX: String = format!("{}{}", "(?mi)".to_string(), ARGS.flag_regex);
-    pub static ref TIME_START: DateTime<Utc> = Utc.datetime_from_str(&ARGS.flag_start, "%Y-%m-%dT%H:%M:%S").unwrap();
-    pub static ref TIME_END: DateTime<Utc> = Utc.datetime_from_str(&ARGS.flag_end, "%Y-%m-%dT%H:%M:%S").unwrap();
+    pub static ref CUSTOM_REGEX: Regex = Regex::new(&format!(r"{}{}", "(?mi)".to_string(), ARGS.flag_regex)).expect("Invalid Regex");
+    pub static ref TIME_START: DateTime<Utc> = Utc.datetime_from_str(&ARGS.flag_start, "%Y-%m-%dT%H:%M:%S").expect("Invalid start time!!!");
+    pub static ref TIME_END: DateTime<Utc> = Utc.datetime_from_str(&ARGS.flag_end, "%Y-%m-%dT%H:%M:%S").expect("Invalid end time!!!");
+    pub static ref FIND_HEX: Vec<u8> = hex_to_bytes(&ARGS.flag_hex).expect("Invalid hex string!!!");
 }
 
 

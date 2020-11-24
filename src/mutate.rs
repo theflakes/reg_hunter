@@ -42,3 +42,23 @@ pub fn value_to_string(
 
     Ok((result, val))
 }
+
+/*
+    Converts hex string to Vec<u8> byte array.
+        e.g. "0a1b2c3d4e5f" convert it to [0, a, 1, b, 2, c, 3, d, 4, e, 5, f]
+    Solution provided by H2CO3
+    See: https://users.rust-lang.org/t/hex-string-to-vec-u8/51903
+*/
+pub fn hex_to_bytes(
+                    hex: &str
+                ) -> Option<Vec<u8>> {
+    if hex.len() % 2 == 0 {
+        (0..hex.len())
+            .step_by(2)
+            .map(|i| hex.get(i..i + 2)
+                      .and_then(|sub| u8::from_str_radix(sub, 16).ok()))
+            .collect()
+    } else {
+        None
+    }
+}
