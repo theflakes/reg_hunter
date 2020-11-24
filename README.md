@@ -97,10 +97,10 @@ Options:
                                         Does not support look aheads/behinds/...
                                         Uses Rust regex crate (case insensitive and multiline)
                                         Any match will add 'Custom' to the tags field
-                                        Tag: Regex
+                                        Tag: RegexHunt
         --hex <string>              Hex search string [default: 00]
                                         format: 0a1b2c3d4e5f
-                                        Tag: Hex
+                                        Tag: HexHunt
         -k, --path                  Search reg key path
         -t, --name                  Search value name
         -v, --value                 Search reg value
@@ -135,21 +135,82 @@ Note:
 Example JSON log:
 ```
 {
+  "parent_data_type": "",
+  "data_type": "Registry",
+  "timestamp": "2020-11-24T17:29:48.822",
+  "device_name": "DESKTOP-NDPUHM4",
+  "device_domain": "DESKTOP-NDPUHM4",
+  "device_type": "Windows 10",
+  "registry_hive": "HKEY_LOCAL_MACHINE",
+  "registry_key": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
+  "registry_value_name": "evil_too",
+  "registry_type": "REG_SZ",
+  "registry_value": "C:\\Temp\\evil.txt.lnk",
+  "last_write_time": "2020-11-24T17:24:30.515",
+  "tags": [
+    "File"
+  ]
+}
+
+{
    "parent_data_type":"",
    "data_type":"Registry",
-   "timestamp":"2020-11-18T02:26:05.144",
-   "device_name":"DESKTOP-NDPUZZM4",
-   "device_domain":"DESKTOP-NDPUZZM4",
+   "timestamp":"2020-11-24T17:29:48.813",
+   "device_name":"DESKTOP-NDPUHM4",
+   "device_domain":"DESKTOP-NDPUHM4",
    "device_type":"Windows 10",
-   "registry_hive":"HKEY_USERS",
-   "registry_key":"Volatile",
-   "registry_value_name":"MsaDevice",
-   "registry_type":"REG_SZ",
-   "registry_value":"t=GwAWAbuEBAAUPrSa9Xbh1D0J93uIPuLO4a+WXwAOZgAAEBTGT0K0Z4Yb1yQ+kp9BEdHgANLuAcfHOSjYFFBzGrBrLhP7Tn42DVLHomaP99kfluqc6pesVhV/Pwr486/KC0rhecROAWOfhfLOeIzcCP3ac+7Gd39nLfE3i0XBqwixziztwygu+xEFSlxrHSRLu0Rl1YWZ4rasrpcX+r43oj6PLzuVWtCkwq+mcFMKhjdC9394PnyoO4hh0oPxt9Gk3JZN784wc6D3AKMT8nntlvzhsBpN+nedTBBTzDmqDh3KiZCgGQTghwy/qXV4/wIg/2Hu1XXbe2f1EbymQeQ1+flMSoIzD15JRNDXITeFWljFcGwE=&p=",
-   "last_write_time":"2020-11-16T12:36:21.928",
+   "registry_hive":"HKEY_LOCAL_MACHINE",
+   "registry_key":"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
+   "registry_value_name":"evil",
+   "registry_type":"REG_BINARY",
+   "registry_value":"[00, 00, 00, 4d, 5a, 90, 00, 00, 00, 00, 00]",
+   "last_write_time":"2020-11-24T17:24:30.515",
    "tags":[
-      "Obfuscation",
-      "Encoding"
+      "MzHeader",
+      "HexHunt"
    ]
+}
+
+{
+  "parent_data_type": "Registry",
+  "data_type": "ShellLink",
+  "timestamp": "2020-11-24T17:29:48.818",
+  "path": "c:\\temp\\evil.txt.lnk",
+  "target_path": "C:\\evil.txt",
+  "last_access_time": "2020-11-24T17:29:48.818",
+  "last_write_time": "2020-11-07T14:14:08.711",
+  "creation_time": "2020-11-07T14:13:06.694",
+  "size": 769,
+  "hidden": true,
+  "arguments": "",
+  "hotkey": "NO_MODIFIER-NoKeyAssigned"
+}
+
+{
+  "parent_data_type": "Registry",
+  "data_type": "File",
+  "timestamp": "2020-11-24T17:29:48.822",
+  "path": "c:\\temp\\evil.txt.lnk",
+  "md5": "0fcba6e9dd09e1cb497454f0b256b490",
+  "mime_type": "application/octet-stream",
+  "last_access_time": "2020-11-24T17:29:48.818",
+  "last_write_time": "2020-11-07T14:14:08.711",
+  "creation_time": "2020-11-07T14:13:06.694",
+  "size": 769,
+  "hidden": true
+}
+
+{
+  "parent_data_type": "ShellLink",
+  "data_type": "File",
+  "timestamp": "2020-11-24T17:29:48.821",
+  "path": "C:\\evil.txt",
+  "md5": "1df1eae8c6c44484a840a40a0543cc59",
+  "mime_type": "text/plain",
+  "last_access_time": "2020-11-24T17:29:48.820",
+  "last_write_time": "2020-11-24T17:23:26.245",
+  "creation_time": "2020-11-24T17:23:17.173",
+  "size": 16,
+  "hidden": true
 }
 ```

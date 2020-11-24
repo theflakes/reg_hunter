@@ -73,11 +73,11 @@ fn run_hunts(
         if (ARGS.flag_path && found_regex(key)?) 
             || (ARGS.flag_name && found_regex(value_name)?) 
             || (ARGS.flag_value && found_regex(value)?) 
-                { t.result = true; t.tags.push("Regex".to_string()) }
+                { t.result = true; t.tags.push("RegexHunt".to_string()) }
     } else {    // still want to run any custom hunt on path and value names if value conversion to string fails
         if (ARGS.flag_path && found_regex(key)?) 
             || (ARGS.flag_name && found_regex(value_name)?) 
-                { t.result = true; t.tags.push("Regex".to_string()) }
+                { t.result = true; t.tags.push("RegexHunt".to_string()) }
     }
 
     // binary searches
@@ -88,7 +88,7 @@ fn run_hunts(
     if (ARGS.flag_path && found_hex(&key.as_bytes().to_vec(), &FIND_HEX)?) 
         || (ARGS.flag_name && found_hex(&value_name.as_bytes().to_vec(), &FIND_HEX)?) 
         || (ARGS.flag_value && found_hex(&bytes, &FIND_HEX)?) 
-            { t.result = true; t.tags.push("Hex".to_string()) }
+            { t.result = true; t.tags.push("HexHunt".to_string()) }
 
     Ok(t)
 }
