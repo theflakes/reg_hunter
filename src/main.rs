@@ -70,11 +70,11 @@ fn run_hunts(
         if (ARGS.flag_everything || ARGS.flag_url) && found_url(value)? 
             { t.result = true; t.tags.push("URL".to_string()) }
         // custom regex cmd line hunts
-        if (ARGS.flag_path && found_regex(key)?) 
-            || (ARGS.flag_name && found_regex(value_name)?) 
-            || (ARGS.flag_value && found_regex(value)?) 
+        if (ARGS.flag_value && found_regex(value)?)
+            || (ARGS.flag_path && found_regex(key)?) 
+            || (ARGS.flag_name && found_regex(value_name)?)
                 { t.result = true; t.tags.push("RegexHunt".to_string()) }
-    } else {    // still want to run any custom hunt on path and value names if value conversion to string fails
+    } else {    // still want to run any custom hunt on path and value names if value conversion to string failss
         if (ARGS.flag_path && found_regex(key)?) 
             || (ARGS.flag_name && found_regex(value_name)?) 
                 { t.result = true; t.tags.push("RegexHunt".to_string()) }
@@ -363,7 +363,7 @@ fn examine_name_value(
     let mut interesting = Results {result: false, tags: vec![]};
     if converted {
         interesting = find_interesting_stuff(&key,&name,&v, true, &value.bytes, already_seen)?;
-    } else if ARGS.flag_binary {
+    } else {
         interesting = find_interesting_stuff(&key,&name,&v, false, &value.bytes, already_seen)?;
     }
 

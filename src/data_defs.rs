@@ -80,7 +80,7 @@ Usage:
     reg_hunter [options]
     reg_hunter --explicit -f -n [--ip <ip> --port <port>]
     reg_hunter --all [-bcefimnorsuwyz] [--ip <ip> --port <port>] [--limit]
-    reg_hunter -a [-bn] [--regex <regex> [--path | --name | --value]]
+    reg_hunter -a --regex <regex> --path --name --value
     reg_hunter -a -y [--start <start_time> --end <end_time>]
 
 Options:
