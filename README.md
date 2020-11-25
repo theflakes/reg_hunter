@@ -134,7 +134,7 @@ Note:
 ```
 
 
-Example JSON log:
+Example JSON logs:
 ```
 {
   "parent_data_type": "",
