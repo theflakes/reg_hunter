@@ -39,7 +39,7 @@ Usage:
     reg_hunter [options]
     reg_hunter --explicit -f -n [--ip <ip> --port <port>]
     reg_hunter --all [-bcefimnorsuwyz] [--ip <ip> --port <port>] [--limit]
-    reg_hunter -a [-bn] [--regex <regex> [--path | --name | --value]]
+    reg_hunter -a --regex <regex> --path --name --value
     reg_hunter -a -y [--start <start_time> --end <end_time>]
 
 Options:
@@ -48,6 +48,10 @@ Options:
         -x, --explicit              Examine only more often forensically interesting keys and values
                                         This option will always report out all 
                                         value names and values unless values are empty/null
+        -k, --key <path>            Only examine a specified reg path. [default: NONE]
+                                        All sub keys will be examined as well.
+                                        Searches both HKLM and HKU hives
+                                        format: SOFTWARE\\Microsoft\\Windows\\CurrentVersion
 
     Hunts:
         -b, --binary                Find possible MZ headers in REG_BINARY values
@@ -103,13 +107,9 @@ Options:
         --hex <string>              Hex search string [default: 00]
                                         format: 0a1b2c3d4e5f
                                         Tag: HexHunt
-        -k, --path                  Search reg key path
+        -j, --path                  Search reg key path
         -t, --name                  Search value name
         -v, --value                 Search reg value
-    
-    Hex hunt:
-        Hunts all values for a given hex string
-        
 
     Network output:
         -d, --destination <ip>      IP address to send output to [default: NONE]

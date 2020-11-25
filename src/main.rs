@@ -74,7 +74,7 @@ fn run_hunts(
             || (ARGS.flag_path && found_regex(key)?) 
             || (ARGS.flag_name && found_regex(value_name)?)
                 { t.result = true; t.tags.push("RegexHunt".to_string()) }
-    } else {    // still want to run any custom hunt on path and value names if value conversion to string failss
+    } else {    // still want to run any custom hunt on path and value names if value conversion to string fails
         if (ARGS.flag_path && found_regex(key)?) 
             || (ARGS.flag_name && found_regex(value_name)?) 
                 { t.result = true; t.tags.push("RegexHunt".to_string()) }
@@ -378,24 +378,57 @@ fn examine_name_value(
 
 // recursively iterate through all registry keys
 fn search_all_value_names(
-                            hive: &str, 
-                            hkey: &RegKey, 
+                            hive_name: &str, 
+                            hive: &RegKey, 
                             key: &str, 
                             already_seen: &mut Vec<String>
                         ) -> std::io::Result<()> 
 {
-    let keys = get_sub_keys(&hkey)?;
+    let keys = get_sub_keys(&hive)?;
     for k in keys {
         let mut key_path: String = k.to_string();
         if !key.is_empty() { 
             key_path = format!("{}\\{}", key, key_path); 
         }
-        get_reg_values(hive, hkey, &k, &key_path, false, already_seen)?;
-        let _ = match hkey.open_subkey(&k) {
-            Ok(n) => search_all_value_names(hive, &n, &key_path, already_seen)?,
+        get_reg_values(hive_name, hive, &k, &key_path, false, already_seen)?;
+        let _ = match hive.open_subkey(&k) {
+            Ok(n) => search_all_value_names(hive_name, &n, &key_path, already_seen)?,
             _ => continue,
         };
     }
+    Ok(())
+}
+
+/*
+    needs work to fit all the cases, returning an error in all instances will break recursion
+    
+*/
+fn open_key(
+                hive: &RegKey,
+                key: &str
+            ) ->Result<RegKey, std::io::Error>
+{
+    let _ = match hive.open_subkey(key) {
+        Ok(k) => return Ok(k),
+        Err(e) => return Err(e)
+    };
+}
+
+// search a specific registry key path values and all its subkeys
+fn search_specific_key(
+                            hive_name: &str, 
+                            hive: &RegKey, 
+                            key: &str, 
+                            already_seen: &mut Vec<String>
+                        ) -> std::io::Result<()> 
+{
+    get_reg_values(hive_name, &hive, &key, &key, false, already_seen)?;
+    let hk = match hive.open_subkey(key) {
+        Ok(k) => k,
+        _ => return Ok(())
+    };
+    search_all_value_names(hive_name, &hk, &key, already_seen)?;
+
     Ok(())
 }
 
@@ -408,15 +441,16 @@ fn main() -> io::Result<()>
     let empty_string = String::new();
 
     // print help screen if no options specified
-    if !(ARGS.flag_explicit || ARGS.flag_all) {
+    if !(ARGS.flag_explicit || ARGS.flag_all) && ARGS.flag_key == "NONE" {
         println!("{}", USAGE);
     } else {
-        if ARGS.flag_explicit {
+        if ARGS.flag_key != "NONE" {
+            search_specific_key(&"HKEY_LOCAL_MACHINE", &hklm, &ARGS.flag_key, &mut already_seen)?;
+            search_specific_key(&"HKEY_USERS", &hku, &ARGS.flag_key, &mut already_seen)?;
+        } else if ARGS.flag_explicit {
             process_interesting_hklm(&hklm, &mut already_seen)?;
             process_interesting_hku(&hku, &mut already_seen)?;
-        }
-        
-        if ARGS.flag_all {
+        } else if ARGS.flag_all {
             search_all_value_names(&"HKEY_LOCAL_MACHINE", &hklm, &empty_string, &mut already_seen)?;
             search_all_value_names(&"HKEY_USERS", &hku, &empty_string, &mut already_seen)?;
         }

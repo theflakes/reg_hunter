@@ -89,6 +89,10 @@ Options:
         -x, --explicit              Examine only more often forensically interesting keys and values
                                         This option will always report out all 
                                         value names and values unless values are empty/null
+        -k, --key <path>            Only examine a specified reg path. [default: NONE]
+                                        All sub keys will be examined as well.
+                                        Searches both HKLM and HKU hives
+                                        format: SOFTWARE\\Microsoft\\Windows\\CurrentVersion
 
     Hunts:
         -b, --binary                Find possible MZ headers in REG_BINARY values
@@ -140,17 +144,13 @@ Options:
                                         Does not support look aheads/behinds/...
                                         Uses Rust regex crate (case insensitive and multiline)
                                         Any match will add 'Custom' to the tags field
-                                        Tag: Regex
+                                        Tag: RegexHunt
         --hex <string>              Hex search string [default: 00]
                                         format: 0a1b2c3d4e5f
-                                        Tag: Hex
-        -k, --path                  Search reg key path
+                                        Tag: HexHunt
+        -j, --path                  Search reg key path
         -t, --name                  Search value name
         -v, --value                 Search reg value
-    
-    Hex hunt:
-        Hunts all values for a given hex string
-        
 
     Network output:
         -d, --destination <ip>      IP address to send output to [default: NONE]
@@ -179,6 +179,7 @@ pub struct Args {
     // what to examine
     pub flag_all: bool,
     pub flag_explicit: bool,
+    pub flag_key: String,
 
     // built-in hunts
     pub flag_binary: bool,
