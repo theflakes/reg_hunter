@@ -51,7 +51,7 @@ Options:
         -k, --key <path>            Only examine a specified reg path. [default: NONE]
                                         All sub keys will be examined as well.
                                         Searches both HKLM and HKU hives
-                                        format: SOFTWARE\\Microsoft\\Windows\\CurrentVersion
+                                        format: SOFTWARE\Microsoft\Windows\CurrentVersion
 
     Hunts:
         -b, --binary                Find possible MZ headers in REG_BINARY values
