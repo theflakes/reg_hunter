@@ -13,7 +13,7 @@ Registry key "last_write_time" is included in Registry JSON logs.
 
 The "tags" field is an array populated by any hunts that are a positive match.
 
-I needed a selfcontained tool, as when I'm triaging an event, the less files I have to push to a remote device the better. Adding in new hunts and recompiling is simple as well. I also wanted a tool that was not dependent on having a minimum .Net version installed.
+I needed a self-contained tool, as when I'm triaging an event, the less files I have to push to a remote device the better. Adding in new hunts and recompiling is simple as well. I also wanted a tool that was not dependent on having a minimum .Net version installed.
 
 NOTE: The "parent_data_type" field specifies the "data_type" that caused the generation of this data type. E.g. If a Lnk file was found in a registry value, this will generate a "ShellLink" data_type with a parent_data_type of "Registry". Then a data_type of "File" with a parent_data_type of "ShellLink" will be generated if the file that the Lnk file points to is found/exists. I.e. Registry --> ShellLink --> File
 
