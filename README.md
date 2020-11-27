@@ -97,14 +97,15 @@ Options:
                                         format: YYYY-MM-DDTHH:MM:SS
 
     Custom hunts (regex and/or hex required):
-        NOTE: A limitation is that only REG_BINARY values that can be 
-        successfully converted to a string will be searched.
+        NOTE: A limitation of the regex hunt is that only REG_BINARY values
+        that can be successfully converted to a string will be searched.
         -q, --regex <regex>         Custom regex [default: $^]
                                         Does not support look aheads/behinds/...
                                         Uses Rust regex crate (case insensitive and multiline)
                                         Any match will add 'Custom' to the tags field
                                         Tag: RegexHunt
-        --hex <string>              Hex search string [default: 00]
+        --hex <string>              Hex search string [default: FF]
+                                        Hex string length must be a multiple of two
                                         format: 0a1b2c3d4e5f
                                         Tag: HexHunt
         -j, --path                  Search reg key path

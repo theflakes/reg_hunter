@@ -87,7 +87,7 @@ pub fn found_hex(
                     find_this: &Vec<u8>
                 ) -> Result<bool> 
 {
-    if find_this != &[0] && bytes.find(find_this).is_some() {
+    if find_this != &[255] && bytes.find(find_this).is_some() {
         Ok(true)
 	} else {
         Ok(false)
