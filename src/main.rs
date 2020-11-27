@@ -38,6 +38,7 @@ fn run_hunts(
                 value: &str,
                 is_string: bool,    // was the reg value successfully converted to a string?
                 bytes: &Vec<u8>,
+                reg_type: &str,
                 already_seen: &mut Vec<String>
             ) -> std::io::Result<Results> 
 {
@@ -90,6 +91,11 @@ fn run_hunts(
         || (ARGS.flag_value && found_hex(&bytes, &FIND_HEX)?) 
             { t.result = true; t.tags.push("HexHunt".to_string()) }
 
+    // hunt and mark registry symbolic links
+    if ARGS.flag_link && reg_type.eq("REG_LINK") {
+        t.result = true; t.tags.push("Link".to_string())
+    }
+
     Ok(t)
 }
 
@@ -99,9 +105,10 @@ fn find_interesting_stuff(
                             value: &str,
                             is_string: bool,    // was the reg value successfully converted to a string?
                             bytes: &Vec<u8>,
+                            reg_type: &str,
                             already_seen: &mut Vec<String>
                         )  -> std::io::Result<Results> {
-    let found_interesting = run_hunts(&key, &value_name, &value, is_string, bytes, already_seen)?;
+    let found_interesting = run_hunts(&key, &value_name, &value, is_string, bytes, reg_type, already_seen)?;
 
     let mut t: Results = Results {result: false, tags: vec![]};
     if found_interesting.result {
@@ -360,18 +367,19 @@ fn examine_name_value(
         if value cannot be converted to string, don't run regex' against it
     */
     let (converted, v) = value_to_string(&value.bytes)?;
+    let reg_type = format!("{:?}", value.vtype);
     let mut interesting = Results {result: false, tags: vec![]};
     if converted {
-        interesting = find_interesting_stuff(&key,&name,&v, true, &value.bytes, already_seen)?;
+        interesting = find_interesting_stuff(&key,&name,&v, true, &value.bytes, &reg_type, already_seen)?;
     } else {
-        interesting = find_interesting_stuff(&key,&name,&v, false, &value.bytes, already_seen)?;
+        interesting = find_interesting_stuff(&key,&name,&v, false, &value.bytes, &reg_type, already_seen)?;
     }
 
     if always_print || interesting.result {
         if interesting.result {
             tags.extend(interesting.tags);
         }
-        print_value("", "Registry", hive_name, key, name.to_string(), &v, format!("{:?}", value.vtype), &lwt, tags)?;
+        print_value("", "Registry", hive_name, key, name.to_string(), &v, reg_type, &lwt, tags)?;
     }
     Ok(())
 }
