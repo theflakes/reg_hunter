@@ -180,7 +180,8 @@ Example JSON logs:
    "tags":[
       "MzHeader",
       "HexHunt"
-   ]
+   ],
+   "error":""
 }
 
 {
@@ -224,5 +225,24 @@ Example JSON logs:
   "creation_time": "2020-11-24T17:23:17.173",
   "size": 16,
   "hidden": true
+}
+
+{
+  "parent_data_type": "Error",
+  "data_type": "Registry",
+  "timestamp": "2020-12-06T20:56:42.113",
+  "device_name": "DESKTOP-NDPUHM4",
+  "device_domain": "DESKTOP-NDPUHM4",
+  "device_type": "Windows 10",
+  "registry_hive": "HKEY_LOCAL_MACHINE",
+  "registry_key": "SOFTWARE\\WOW6432Node\\Systems Internals\\Can't touch me!\u0000",
+  "registry_value_name": "ERROR_READING",
+  "registry_type": "REG_ERROR",
+  "registry_value": "ERROR_READING",
+  "last_write_time": "",
+  "tags": [
+    "HiddenKey"
+  ],
+  "error": "The system cannot find the file specified. (os error 2)"
 }
 ```
