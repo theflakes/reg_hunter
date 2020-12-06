@@ -58,26 +58,27 @@ Options:
                                         Tag: MzHeader
         -c, --shell                 Find command shells (cmd.exe, powershell.exe, ...)
                                         Tag: Shell
-        -e, --encoding              Find possible encoded values
+        -e, --encoding              Find possibly encoded values
                                         Tag: Encoding
         -f, --file                  Find files referenced in registry values 
                                         and collect lnk/file metadata. If a lnk file is found, 
                                         metadata on both the lnk and file it points to will be 
                                         reported.
                                         Tag: File
+        -g, --link                  Hunt for registry symbolic links
         -i, --ip                    Search for IPv4 addresses
                                         Tag: IPv4
         -m, --email                 Find email addresses
                                         Tag: Email
         -n, --null                  Hunt for null prefixed value names
                                         Tag: NullPrefixedName
-        -o, --obfuscation           Find obfuscated values
+        -o, --obfuscation           Find possibly obfuscated values
                                         Tag: Obfuscation
         -r, --script                Find script files
                                         Tag: Script
         -s, --shellcode             Find possible shellcode
                                         Tag: Shellcode
-        -u, --unc                   Find possible UNC paths
+        -u, --unc                   Find UNC paths
                                         Tag: UNC
         -w, --url                   Find URLs
                                         Tag: URL
@@ -87,9 +88,9 @@ Options:
         -z, --everything            Run ALL the hunts
 
     Time window:
-        This option will compare the specified date window to the registry last_write_time
-        and only output logs where the last_write_time falls within that window.
-        Window start is inclusive, window end is exclusive. 
+        This option will compare the specified date window to the registry key's 
+        last_write_time and only output logs where the last_write_time falls 
+        within that window. Window start is inclusive, window end is exclusive. 
         NOTE: key last_write_time can be timestomped.
         --start <UTC_start_time>        Start of time window: [default: 0000-01-01T00:00:00]
                                         format: YYYY-MM-DDTHH:MM:SS
@@ -119,9 +120,17 @@ Options:
     Misc:
         -h, --help                  Show this screen
         -l, --limit                 Try to minimize CPU use as much as possible
+        --print                     Always output log whether a hunt matched or not
+        --debug                     Print error logs
+                                        e.g. access denied to a registry key
+                                             failure opening a registry key
 
 Note:
     If not run as an administrator some telemetry cannot be harvested.
+
+    An error log with tag of 'HiddenKey' will be generated if any registry key
+    that fails to open is identified as a maliciously hidden key.
+        e.g. Key path ends with a unicode null character.
 
     The output is mostly meant to be fed into some hunting backend. But,
     there are some built in hunts; --null, --binary, ...

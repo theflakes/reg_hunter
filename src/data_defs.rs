@@ -161,9 +161,17 @@ Options:
     Misc:
         -h, --help                  Show this screen
         -l, --limit                 Try to minimize CPU use as much as possible
+        --print                     Always output log whether a hunt matched or not
+        --debug                     Print error logs
+                                        e.g. access denied to a registry key
+                                             failure opening a registry key
 
 Note:
     If not run as an administrator some telemetry cannot be harvested.
+
+    An error log with tag of 'HiddenKey' will be generated if any registry key
+    that fails to open is identified as a maliciously hidden key.
+        e.g. Key path ends with a unicode null character.
 
     The output is mostly meant to be fed into some hunting backend. But,
     there are some built in hunts; --null, --binary, ...
@@ -217,6 +225,8 @@ pub struct Args {
 
     //misc.
     pub flag_limit: bool,
+    pub flag_print: bool,
+    pub flag_debug: bool,
 }
 
 lazy_static! { 
@@ -615,7 +625,8 @@ pub struct TxRegistry {
     pub registry_type: String,
     pub registry_value: String,
     pub last_write_time: String,
-    pub tags: Vec<String>
+    pub tags: Vec<String>,
+    pub error: String
 }
 impl TxRegistry {
     pub fn new(
@@ -631,7 +642,8 @@ impl TxRegistry {
         registry_type: String,
         registry_value: String,
         last_write_time: String,
-        tags: Vec<String>) -> TxRegistry {
+        tags: Vec<String>,
+        error: String) -> TxRegistry {
         TxRegistry {
             parent_data_type,
             data_type,
@@ -645,7 +657,8 @@ impl TxRegistry {
             registry_type,
             registry_value,
             last_write_time,
-            tags
+            tags,
+            error
         }
     }
 

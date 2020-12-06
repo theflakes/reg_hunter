@@ -124,7 +124,9 @@ pub fn found_null(
     }
 }
 
-
+/*
+    source: https://www.fireeye.com/content/dam/fireeye-www/blog/pdfs/dosfuscation-report.pdf
+*/
 pub fn found_obfuscation(
                 text: &str
             ) -> Result<bool> 
@@ -137,12 +139,18 @@ pub fn found_obfuscation(
                 (?:'?\+'?.*){7}|
                 (?:\^.*){7}|
                 (?:`.*){7}|
-                (?:\([a-z0-9 _.$@!&\#%^',\[\]+;~`{}=|*(-]*\).*){7}|
+                (?:\([a-z0-9\x20_.$@!&\#%^',\[\]+;~`{}=|*(-]*\).*){7}|
                 (?:','.*){7}|
                 (?:\{\d+\}){7}|
                 (?:\$[{(].+[)}].*){7}|
                 (?:,;,.*){7}|
-                (?:["'](?:[^"']{0,4}["'][^"'].*)){6}
+                (?:["'](?:[^"']{0,4}["'][^"'].*)){6}|
+                for.+do.+(?:%|call|set)|
+                set.+echo\s+%.+:|
+                (?:\x20{3,}\S+){3}|\x20{10}\S+|
+                (?:&&.+){2}|&&c(?:md|all)|
+                [/\\_-]{8}|
+                :~[0-9-\s+]+[0-9,\s+]*%|%%\S+%%
             )                                                                  
         "#).expect("Invalid Regex");
     }
@@ -192,7 +200,7 @@ pub fn found_shell(
     lazy_static! {
         static ref SHELL: Regex = Regex::new(r#"(?mix)
             (:?
-                (?:cmd|powershell|sqlps)(?:\.exe)?|pwsh
+                (?:[|\s'"><&\\]|^)(?:(?:cmd|powershell|sqlps)(?:\.exe)?|pwsh)(?:[|\s'"><&]|$)
             )                                                                  
         "#).expect("Invalid Regex");
     }
@@ -231,7 +239,7 @@ pub fn found_suspicious(
             (:?
                 FromBase64String|ToBase64String|System\.Text\.Encoding|
                 System\.Convert|securestringtoglobalallocunicode|
-                [string]::join|\.GetString|
+                [string]::join|\.GetString|.invoke|
 
                 /t(?:icket|arget)|
                 ACgAJwBVAHMAZQByAC0AQQBnAGUAbgB0ACcALAAk|                       # Empire RAT
