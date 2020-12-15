@@ -1,6 +1,8 @@
 # reg_hunter
 Blueteam operational triage registry hunting/forensic tool.
 
+Demo and misc. information on Registry Hunter via Forensic Lunch podcast: https://www.youtube.com/watch?v=_lKinL7f7ak&t=2s
+
 Thank you to https://twitter.com/Hexacorn and https://twitter.com/SBousseaden for their open research. Many of the explicit registry keys and values defined in this tool came from their graciously shared hard work.
 
 Thanks to https://github.com/lilopkins and https://github.com/gentoo90 for the Lnk and Registry Rust crates.
