@@ -6,6 +6,10 @@
     I try to continue through all errors to allow the analysis to complete.
     But, no doubt, I missed some corner cases.
 
+    Adding rust 32bit target:
+        rustup toolchain install stable-i686-pc-windows-msvc
+        rustup target add i686-pc-windows-msvc
+
     Compiling:
         x32: cargo build --release --target i686-pc-windows-msvc
         x64: cargo build --release --target x86_64-pc-windows-msvc

@@ -23,7 +23,13 @@ NOTE: The "parent_data_type" field specifies the "data_type" that caused the gen
 
 A file/lnk's meta data will only be collected once no matter how many times it is referenced in registry values.
 
-To compile; install Rust and the MSVC 32 and/or 64 bit environment.
+Add Rust 32 bit target build environment:
+```
+    rustup toolchain install stable-i686-pc-windows-msvc
+    rustup target add i686-pc-windows-msvc
+```
+
+To compile; install Rust and the MSVC 32 and/or 64 bit environment:
 ```
     x32: cargo build --release --target i686-pc-windows-msvc
     x64: cargo build --release --target x86_64-pc-windows-msvc
