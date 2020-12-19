@@ -1,6 +1,8 @@
 # reg_hunter
 Blueteam operational triage registry hunting/forensic tool.
 
+I hope to incorporate more than just registry triage and hunting. I'd love to see this tool become a standalone triage / hunt tool for all Windows persistence mechanisms.
+
 Demo and misc. information on Registry Hunter via Forensic Lunch podcast: https://www.youtube.com/watch?v=_lKinL7f7ak&t=2s
 
 Thank you to https://twitter.com/Hexacorn and https://twitter.com/SBousseaden for their open research. Many of the explicit registry keys and values defined in this tool came from their graciously shared hard work.
