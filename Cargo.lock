@@ -155,9 +155,9 @@ checksum = "2448f6066e80e3bfc792e9c98bf705b4b0fc6e8ef5b43e5889aff0eaa9c58743"
 
 [[package]]
 name = "lnk"
-version = "0.3.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5afc3411d4a446db17a7fe5ac533219236067c26de38903f88c308f8200322b2"
+checksum = "74c22ceaeab0d65bc44bb98e3fd15bdf7b77ad5035c72a9d30edc9c4425da0bb"
 dependencies = [
  "bitflags",
  "byteorder",
@@ -316,7 +316,7 @@ checksum = "41cc0f7e4d5d4544e8861606a285bb08d3e70712ccc7d2b84d7c0ccfaf4b05ce"
 
 [[package]]
 name = "reg_hunter"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "arrayvec",
  "bstr",
