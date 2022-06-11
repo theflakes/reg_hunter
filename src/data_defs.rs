@@ -501,6 +501,17 @@ pub fn hku_init() -> HashMap<&'static str, Vec<&'static str>> {
     hku.insert("software\\microsoft\\office\\outlook\\addins", [].to_vec());
     hku.insert("software\\microsoft\\office\\powerpoint\\addins", [].to_vec());
     hku.insert("software\\microsoft\\office\\word\\addins", [].to_vec());
+    hku.insert("software\\microsoft\\office\\10.0\\common\\internet\\server Cache", [].to_vec());
+    hku.insert("software\\microsoft\\office\\11.0\\common\\internet\\server Cache", [].to_vec());
+    hku.insert("software\\microsoft\\office\\12.0\\common\\internet\\server Cache", [].to_vec());
+    hku.insert("software\\microsoft\\office\\13.0\\common\\internet\\server Cache", [].to_vec());
+    hku.insert("software\\microsoft\\office\\14.0\\common\\internet\\server Cache", [].to_vec());
+    hku.insert("software\\microsoft\\office\\15.0\\common\\internet\\server Cache", [].to_vec());
+    hku.insert("software\\microsoft\\office\\16.0\\common\\internet\\server Cache", [].to_vec());
+    hku.insert("software\\microsoft\\office\\17.0\\common\\internet\\server Cache", [].to_vec());
+    hku.insert("software\\microsoft\\office\\18.0\\common\\internet\\server Cache", [].to_vec());
+    hku.insert("software\\microsoft\\office\\19.0\\common\\internet\\server Cache", [].to_vec());
+    hku.insert("software\\microsoft\\office\\20.0\\common\\internet\\server Cache", [].to_vec());
     hku.insert("software\\microsoft\\office test\\special\\perf", [].to_vec());
     hku.insert("software\\microsoft\\terminal server client\\default", [].to_vec());
     hku.insert("software\\microsoft\\windows\\currentversion", ["debug"].to_vec());
