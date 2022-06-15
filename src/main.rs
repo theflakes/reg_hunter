@@ -285,7 +285,7 @@ fn harvest_reg_keys(
                     already_seen: &mut Vec<String>
                 ) -> std::io::Result<()> 
 {
-    let k = key.to_lowercase();
+    let mut k = key.to_lowercase();
     if k.contains("system\\currentcontrolset\\services\\portproxy") {
         harvest_reg_key(hive, hkey, &format!("{}{}", k, "\\v4tov4\\tcp"), values, already_seen)?;
         harvest_reg_key(hive, hkey, &format!("{}{}", k, "\\v4tov4\\udp"), values, already_seen)?;
@@ -311,10 +311,16 @@ fn harvest_reg_keys(
     } else if k.contains("software\\microsoft\\microsoft sql server") {
         recurse_reg_key(hive, hkey, key, values, &["\\tools\\shell\\addins"].to_vec(), already_seen)?;
     } else if k.contains("\\microsoft\\office\\") {
-        harvest_reg_key(hive, hkey, key, values, already_seen)?;
-        recurse_reg_key(hive, hkey, key, values, &[].to_vec(), already_seen)?;
-    } else if k.contains("\\microsoft\\office") {
-        recurse_reg_key(hive, hkey, key, values, &["\\outlook\\security"].to_vec(), already_seen)?;
+        // handle different versions of Office, e.g. software\\microsoft\\office\\*.0\\
+        if k.contains("*.0") {
+            for v in 10..30 {
+                k = k.replace("*", &v.to_string());
+                recurse_reg_key(hive, hkey, key, values, &[].to_vec(), already_seen)?;
+            }
+        } else {
+            harvest_reg_key(hive, hkey, key, values, already_seen)?;
+            recurse_reg_key(hive, hkey, key, values, &[].to_vec(), already_seen)?;
+        }
     } else {
         harvest_reg_key(hive, hkey, key, values, already_seen)?;
         recurse_reg_key(hive, hkey, key, values, &[].to_vec(), already_seen)?;
