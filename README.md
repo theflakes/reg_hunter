@@ -131,6 +131,8 @@ Options:
         -h, --help                  Show this screen
         -l, --limit                 Try to minimize CPU use as much as possible
         --print                     Always output log whether a hunt matched or not
+        --outfile <file>            Send output to a file / filepath [default: NONE]
+                                        If the file exists, it will be appended to
         --debug                     Print error logs
                                         e.g. access denied to a registry key
                                              failure opening a registry key
