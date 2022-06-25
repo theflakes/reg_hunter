@@ -8,6 +8,8 @@ extern crate chrono;
 use crate::mutate::hex_to_bytes;
 
 use std::collections::HashMap;
+use std::fs::File;
+use bstr::Bytes;
 use serde::Serialize;
 use serde_derive::{Deserialize};
 use std::io::prelude::{Write};
@@ -16,6 +18,7 @@ use std::thread;
 use std::env;
 use chrono::*;
 use regex::Regex;
+use std::sync::Mutex;
 
 // do not like using "unwrap" here
 lazy_static! {
@@ -80,6 +83,7 @@ Usage:
     reg_hunter [options]
     reg_hunter --explicit -f -n [--ip <ip> --port <port>]
     reg_hunter --all [-bcefimnorsuwyz] [--ip <ip> --port <port>] [--limit]
+    reg_hunter --all [-bcefimnorsuwyz] [--outfile <file>] [--limit]
     reg_hunter -a --regex <regex> --path --name --value
     reg_hunter -a -y [--start <start_time> --end <end_time>]
 
@@ -162,6 +166,8 @@ Options:
         -h, --help                  Show this screen
         -l, --limit                 Try to minimize CPU use as much as possible
         --print                     Always output log whether a hunt matched or not
+        --outfile <file>            Send output to a file / filepath [default: NONE]
+                                        If the file exists, it will be appended to       
         --debug                     Print error logs
                                         e.g. access denied to a registry key
                                              failure opening a registry key
@@ -226,6 +232,7 @@ pub struct Args {
     //misc.
     pub flag_limit: bool,
     pub flag_print: bool,
+    pub flag_outfile: String,
     pub flag_debug: bool,
 }
 
@@ -238,8 +245,42 @@ lazy_static! {
     pub static ref TIME_START: DateTime<Utc> = Utc.datetime_from_str(&ARGS.flag_start, "%Y-%m-%dT%H:%M:%S").expect("Invalid start time!!!");
     pub static ref TIME_END: DateTime<Utc> = Utc.datetime_from_str(&ARGS.flag_end, "%Y-%m-%dT%H:%M:%S").expect("Invalid end time!!!");
     pub static ref FIND_HEX: Vec<u8> = hex_to_bytes(&ARGS.flag_hex).expect("Invalid hex string!!!");
+    //pub static ref OUT_FILE: Mutex<File> = Mutex::new(std::fs::File::create(&ARGS.flag_outfile).expect("Cannot create file"));
+    pub static ref OUT_FILE: Mutex<File> = Mutex::new(std::fs::OpenOptions::new().create(true).append(true).open(&ARGS.flag_outfile).expect("Unable to open file"));  
 }
 
+/*
+    Help provided by Yandros on using traits: 
+        https://users.rust-lang.org/t/refactor-struct-fn-with-macro/40093
+*/
+type Str = ::std::borrow::Cow<'static, str>;
+trait Loggable : Serialize {
+    /// convert struct to json
+    fn to_log (self: &'_ Self) -> Str
+    {
+        ::serde_json::to_string(&self)
+            .ok()
+            .map_or("<failed to serialize>".into(), Into::into)
+    }
+    
+    /// convert struct to json and report it out
+    fn write_log (self: &'_ Self)
+    {
+        if !ARGS.flag_destination.eq("NONE") {
+            let socket = format!("{}:{}", ARGS.flag_destination, ARGS.flag_port);
+            let mut stream = ::std::net::TcpStream::connect(socket)
+                .expect("Could not connect to server");
+            writeln!(stream, "{}", self.to_log())
+                .expect("Failed to write to server");
+        } else if !ARGS.flag_outfile.eq("NONE") {
+            let mut outfile = OUT_FILE.lock().unwrap();
+            outfile.write_fmt(format_args!("{}{}", self.to_log(), "\n")).expect("File write failed");
+        } else {
+            println!("{}", self.to_log());
+        }
+    }
+}
+impl<T : ?Sized + Serialize> Loggable for T {}
 
 pub struct Results {
     pub result: bool,
@@ -581,36 +622,6 @@ pub fn hku_init() -> HashMap<&'static str, Vec<&'static str>> {
 
     return hku;
 }
-
-/*
-    Help provided by Yandros on using traits: 
-        https://users.rust-lang.org/t/refactor-struct-fn-with-macro/40093
-*/
-type Str = ::std::borrow::Cow<'static, str>;
-trait Loggable : Serialize {
-    /// convert struct to json
-    fn to_log (self: &'_ Self) -> Str
-    {
-        ::serde_json::to_string(&self)
-            .ok()
-            .map_or("<failed to serialize>".into(), Into::into)
-    }
-    
-    /// convert struct to json and report it out
-    fn write_log (self: &'_ Self)
-    {
-        if !ARGS.flag_destination.eq("NONE") {
-            let socket = format!("{}:{}", ARGS.flag_destination, ARGS.flag_port);
-            let mut stream = ::std::net::TcpStream::connect(socket)
-                .expect("Could not connect to server");
-            writeln!(stream, "{}", self.to_log())
-                .expect("Failed to write to server");
-        } else {
-            println!("{}", self.to_log());
-        }
-    }
-}
-impl<T : ?Sized + Serialize> Loggable for T {}
 
 #[derive(Serialize)]
 pub struct TxRegistry {
