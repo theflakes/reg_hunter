@@ -88,7 +88,7 @@ fn run_hunts(
     // binary searches
     if (ARGS.flag_everything || ARGS.flag_binary) 
         && (found_hex(bytes, &[0x4D, 0x5A, 0x90, 0x00].to_vec())? // did we find bytes that match a MZ header?
-        || value.starts_with("TVq"))                             // If the string starts with TVq, assume base64 encoded MZ header 
+        || value.contains("TVq"))                             // If the string contains TVq, assume base64 encoded MZ header 
             { t.result = true; t.tags.push("MzHeader".to_string()) }
     
     if (ARGS.flag_path && found_hex(&key.as_bytes().to_vec(), &FIND_HEX)?) 
