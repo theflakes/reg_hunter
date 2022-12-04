@@ -1,6 +1,8 @@
 #
 # Statically Link so that C++ runtime is not required for running the binary
 #
+[target.x86_64-pc-windows-gnu]
+rustflags = ["-C", "target-feature=+crt-static", "-Aunused"]
 
 [target.i686-pc-windows-msvc]
 rustflags = ["-C", "target-feature=+crt-static", "-Aunused"]

@@ -31,8 +31,9 @@ Add Rust 32 bit target build environment:
 
 To compile; install Rust and the MSVC 32 and/or 64 bit environment:
 ```
-    x32: cargo build --release --target i686-pc-windows-msvc
-    x64: cargo build --release --target x86_64-pc-windows-msvc
+    x32:        cargo build --release --target i686-pc-windows-msvc
+    x64:        cargo build --release --target x86_64-pc-windows-msvc
+    Linux x64:  cargo build release --target x86_64-pc-windows-gnu
 ```
 
 ```
@@ -155,8 +156,27 @@ Note:
     Files larger than 256MB will not be hashed.
 ```
 
+##### Example commands:
+`reg_hunter --all --null`
+- Search the entire registry for null hidden keys
 
-Example JSON logs:
+`reg_hunter --all --print --start 2022-11-01T00:00:00`
+- Print out all changed registry keys since November 1st 2022
+- Great tactic for finding malicious entries when you know the start date of a possible compromise
+
+`reg_hunter --key "system\CurrentControlSet\Services" --print`
+- Print out all registry keys and values found under the given registry location
+
+`reg_hunter --key "system\CurrentControlSet\Services" --everything`
+- Run all hunts against the give registry location
+
+`reg_hunter --explicit --everything`
+- Run all hunts against just the more forensically interesting registry keys and values
+
+`reg_hunter -abcsy`
+- Run the following hunts against the entire registry: binary, shell, shellcode, suspicious
+
+##### xample JSON logs:
 ```
 {
   "parent_data_type": "",
