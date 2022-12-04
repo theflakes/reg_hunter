@@ -143,6 +143,9 @@ Options:
 Note:
     If not run as an administrator some telemetry cannot be harvested.
 
+    Only logs that are matched by a hunt are printed out unless the --print
+    or --explicite argument is used.
+
     An error log with tag of 'HiddenKey' will be generated if any registry key
     that fails to open is identified as a maliciously hidden key.
         e.g. Key path ends with a unicode null character.
@@ -151,7 +154,7 @@ Note:
     there are some built in hunts; --null, --binary, ...
 
     Depending on the options used, considerable output can be generated.
-    
+
     To capture output remotely, start a netcat listener on your port of choice.
     Use the -k option with netcat to prevent netcat from closing after a TCP connection is closed.
 
