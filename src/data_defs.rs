@@ -100,6 +100,7 @@ Options:
 
     Hunts:
         -b, --binary                Find possible MZ headers in REG_BINARY values
+                                        and possible Base64 encoded MZ headers - e.g. 'TVq'
                                         Tag: MzHeader
         -c, --shell                 Find command shells (cmd.exe, powershell.exe, ...)
                                         Tag: Shell
