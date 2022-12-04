@@ -181,7 +181,7 @@ Note:
 `reg_hunter -abcsy`
 - Run the following hunts against the entire registry: binary, shell, shellcode, suspicious
 
-##### xample JSON logs:
+##### Example JSON logs:
 ```
 {
   "parent_data_type": "",
