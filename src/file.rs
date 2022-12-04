@@ -287,10 +287,10 @@ pub fn expand_env_vars(
     can do better
 */
 pub fn find_file(
-                        pdt: &str, 
-                        file_path: &std::path::Path,
-                        already_seen: &mut Vec<String>
-                    ) -> std::io::Result<()>
+                pdt: &str, 
+                file_path: &std::path::Path,
+                already_seen: &mut Vec<String>
+            ) -> std::io::Result<()>
 {
     lazy_static! {
         static ref JUST_FILENAME: Regex = Regex::new(r#"(?mix)
