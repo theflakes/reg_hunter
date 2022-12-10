@@ -174,7 +174,7 @@ Note:
 - Print out all registry keys and values found under the given registry location
 
 `reg_hunter --key "system\CurrentControlSet\Services" --everything`
-- Run all hunts against the give registry location
+- Run all hunts against the given registry location
 
 `reg_hunter --explicit --everything`
 - Run all hunts against just the more forensically interesting registry keys and values
