@@ -35,7 +35,7 @@ To compile; install Rust and the MSVC 32 and/or 64 bit environment:
     x32:        cargo build --release --target i686-pc-windows-msvc
     x64:        cargo build --release --target x86_64-pc-windows-msvc
     Linux x64:  sudo apt update && sudo apt install mingw-w64
-                cargo build release --target x86_64-pc-windows-gnu
+                cargo build --release --target x86_64-pc-windows-gnu
 ```
 
 ```
