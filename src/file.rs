@@ -85,7 +85,7 @@ pub fn file_to_vec(
                 ) -> io::Result<Vec<String>> 
 {
     let file_in = fs::File::open(filename)?;
-    let file_reader = BufReader::new(file_in);
+    let file_reader = BufReader::new(file_in)?;
     Ok(file_reader.lines().filter_map(io::Result::ok).collect())
 }
 
@@ -233,7 +233,7 @@ pub fn process_file(
             { return Ok(()) }
 
     already_seen.push(path.to_string());    // track files we've processed so we don't process them more than once
-    get_link_info(&pdt, file_path, already_seen)?;   // is this file a symlink? TRUE: get sysmlink info and path to linked file
+    get_link_info(&pdt, file_path, already_seen)?;   // is this file a symlink? TRUE: get symlink info and path to linked file
     let metadata = match fs::metadata(dunce::simplified(&file_path)) {
         Ok(m) => m,
         _ => return Ok(())
