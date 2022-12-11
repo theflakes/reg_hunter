@@ -143,7 +143,7 @@ fn process_link(
 {
     let metadata = match fs::metadata(&link_path) {
         Ok(m) => m,
-        _ => return Ok(())
+        Err(_e) => return Ok(())
     };
     let mut ctime = get_epoch_start();  // Most linux versions do not support created timestamps
     if metadata.created().is_ok() {
@@ -236,7 +236,7 @@ pub fn process_file(
     get_link_info(&pdt, file_path, already_seen)?;   // is this file a symlink? TRUE: get symlink info and path to linked file
     let metadata = match fs::metadata(dunce::simplified(&file_path)) {
         Ok(m) => m,
-        _ => return Ok(())
+        Err(e) => return Err(e)
     };
     let mut ctime = get_epoch_start();
     if metadata.created().is_ok() { 
@@ -248,9 +248,9 @@ pub fn process_file(
     let file = open_file(&file_path)?;
     let (md5, mime_type) = match get_file_content_info(&file) {
         Ok((m, t)) => (m, t),
-        _ => ("".to_string(), "".to_string())
+        Err(_e) => ("".to_string(), "".to_string())
     };
-    drop(file); // close file handle immediately after not needed to avoid too many files open error
+    drop(file); // close file handle immediately after not needed, to avoid too many files open error
 
     TxFile::new(pdt.to_string(), "File".to_string(), get_now()?, 
                 path.to_string(), md5, mime_type, atime, wtime, 
@@ -275,7 +275,7 @@ pub fn expand_env_vars(
         "" => String::from("%"),
         varname => match env::var(varname) {
             Ok(v) => v,
-            _ => varname.to_string()
+            Err(_e) => varname.to_string()
         }.to_string()
     }).into();
 
@@ -302,7 +302,7 @@ pub fn find_file(
     let possible_path = &file_path.to_string_lossy().to_owned().to_lowercase();
     let mut path: String = match expand_env_vars(&possible_path) {
         Ok(p) => p,
-        _ => possible_path.to_string()
+        Err(_e) => possible_path.to_string()
     };
 
     if JUST_FILENAME.is_match(&path) {

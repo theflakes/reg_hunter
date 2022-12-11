@@ -196,7 +196,7 @@ fn get_reg_value(
     for v in values {
         let _ = match hkey.get_raw_value(v) {
             Ok(t) => examine_name_value(hive, &hkey, key, &v, &t, true, already_seen)?,
-            _ => return Ok(()),
+            Err(_e) => return Ok(()),
         };
     }
     Ok(())
@@ -214,7 +214,7 @@ fn get_reg_values(
     for value_result in hkey.enum_values() {
         let _ = match value_result {
             Ok((n, v)) => examine_name_value(hive, &hkey, key_path, &n, &v, always_print, already_seen)?,
-            _ => continue, 
+            Err(_e) => continue, 
         };
     }
 
@@ -232,7 +232,7 @@ fn harvest_reg_key(
 {
     let hk =  match open_key(hive, hkey, key, key) {
         Ok(k) => k,
-        _ => return Ok(()),  
+        Err(_e) => return Ok(()),  
     };
     if std::vec::Vec::is_empty(values) {
         get_reg_values(hive, &hk, key,  true, already_seen)?;
@@ -256,12 +256,12 @@ fn recurse_reg_key(
 {
     let k =  match open_key(hive, hkey, key, key) {
         Ok(k) => k,
-        _ => return Ok(()),  
+        Err(_e) => return Ok(()),  
     };
     for key_result in k.enum_keys() {
         let k = match key_result {
             Ok(v) => v,
-            _ => continue, 
+            Err(_e) => continue, 
         };
         if std::vec::Vec::is_empty(suffixes) {
             harvest_reg_key(hive, hkey, &format!("{}\\{}", key, k), values, already_seen)?;
@@ -354,7 +354,7 @@ fn get_sub_keys(
     for key_result in key.enum_keys() {
         let k = match key_result {
             Ok(v) => v,
-            _ => continue, 
+            Err(_e) => continue, 
         };
         keys.push(k);
     }
@@ -444,7 +444,7 @@ fn search_all_value_names(
         }
         let _ =  match open_key(hive_name, hkey, &k, &key_path) {
             Ok(n) => search_all_value_names(hive_name, &n, &key_path, already_seen)?,
-            _ => continue,  
+            Err(_e) => continue,  
         };
     }
     Ok(())
@@ -459,7 +459,7 @@ fn search_specific_key_hklm(
 {
     let hk =  match open_key(hive_name, hive, key, key) {
         Ok(k) => k,
-        _ => return Ok(()),  
+        Err(_e) => return Ok(()),  
     };
     search_all_value_names(hive_name, &hk, &key, already_seen)?;
 
@@ -478,7 +478,7 @@ fn search_specific_key_hku(
         let key_path = format!("{}\\{}", k, key);
         let hk =  match open_key(hive_name, hive, &key_path, &key_path) {
             Ok(k) => k,
-            _ => continue,
+            Err(_e) => continue,
         };
         search_all_value_names(hive_name, &hk, &key_path, already_seen)?;
     }
