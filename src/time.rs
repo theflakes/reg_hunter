@@ -32,7 +32,7 @@ pub fn to_utc_datetime(
 {
     let _: DateTime<Utc> = match Utc.datetime_from_str(time, "%Y-%m-%dT%H:%M:%S.%3f") {
         Ok(t) => return Ok(t),
-        Err(_) => return Ok(*TIME_END)
+        Err(_e) => return Ok(*TIME_END)
     };
 }
 

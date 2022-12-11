@@ -30,7 +30,7 @@ pub fn value_to_string(
 
     let mut val: String = match std::str::from_utf8(value) { // refactor to deal with other reg types; e.g. binary
         Ok(v) => v.to_string().replace("\u{0}", ""),
-        _ => String::new(),
+        Err(_e) => String::new(),
     };
 
     // if conversion failed, lets convert the value to a hex array
