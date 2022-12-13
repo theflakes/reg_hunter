@@ -171,6 +171,17 @@ pub fn found_regex(
         }
 }
 
+pub fn found_righttoleft(
+    text: &str
+) -> Result<bool> 
+{   
+    if text.contains('\u{202E}') { 
+        Ok(true) 
+    } else { 
+        Ok(false) 
+    }
+}
+
 
 pub fn found_script(
                 text: &str

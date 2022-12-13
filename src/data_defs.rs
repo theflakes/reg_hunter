@@ -114,6 +114,8 @@ Options:
         -g, --link                  Hunt for registry symbolic links
         -i, --ip                    Search for IPv4 addresses
                                         Tag: IPv4
+        -l, --rightleft             Hunt for RightToLeft override
+                                        Tag: RightToLeft
         -m, --email                 Find email addresses
                                         Tag: Email
         -n, --null                  Hunt for null prefixed value names
@@ -211,6 +213,7 @@ pub struct Args {
     pub flag_link: bool,
     pub flag_null: bool,
     pub flag_obfuscation: bool,
+    pub flag_rightleft: bool,
     pub flag_script: bool,
     pub flag_shellcode: bool,
     pub flag_shell: bool,
