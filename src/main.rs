@@ -64,6 +64,8 @@ fn run_hunts(
             { t.result = true; t.tags.push("Obfuscation".to_string()) }
         if (ARGS.flag_everything || ARGS.flag_rightleft) && found_righttoleft(value)? 
             { t.result = true; t.tags.push("RightToLeft".to_string()) }
+        if (ARGS.flag_everything || ARGS.flag_rightleft) && found_righttoleft(value_name)? 
+            { t.result = true; t.tags.push("RightToLeft".to_string()) }
         if (ARGS.flag_everything || ARGS.flag_script) && found_script(value)? 
             { t.result = true; t.tags.push("Script".to_string()) }
         if (ARGS.flag_everything || ARGS.flag_shell) && found_shell(value)? 
