@@ -168,7 +168,7 @@ Options:
 
     Misc:
         -h, --help                  Show this screen
-        -l, --limit                 Try to minimize CPU use as much as possible
+        --limit                 Try to minimize CPU use as much as possible
         --print                     Always output log whether a hunt matched or not
         --outfile <file>            Send output to a line delimted file [default: NONE]
                                         If the file exists, it will be appended to       
