@@ -112,6 +112,7 @@ Options:
                                         reported.
                                         Tag: File
         -g, --link                  Hunt for registry symbolic links
+                                        WORK IN PROGRESS
         -i, --ip                    Search for IPv4 addresses
                                         Tag: IPv4
         -l, --rightleft             Hunt for RightToLeft override
