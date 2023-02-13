@@ -153,8 +153,8 @@ fn process_link(
     let wtime = format_date(metadata.modified()?.into())?;
     let size = metadata.len();
     TxLink::new(pdt.to_string(), "ShellLink".to_string(), get_now()?, 
-                            link_path, file_path, atime, wtime, 
-                            ctime, size, hidden, arguments, hotkey).report_log();
+                link_path, file_path, atime, wtime, 
+                ctime, size, hidden, arguments, hotkey).report_log();
 
     Ok(())
 }
