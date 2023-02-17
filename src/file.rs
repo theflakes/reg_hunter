@@ -7,7 +7,7 @@ extern crate lnk;
 use crate::{data_defs::*, mutate::*, time::*};
 use std::{fs::{self, File}, io::{self, BufRead, BufReader, Read}};
 use path_abs::{PathAbs, PathInfo};
-use lnk::{ShellLink};
+use lnk::{ShellLink, LinkInfo, linkinfo::VolumeID};
 use std::os::windows::prelude::*;
 use std::{str, env};
 use regex::Regex;
@@ -131,34 +131,6 @@ fn resolve_link(
     Ok(dunce::simplified(&abs.as_path()).into())
 }
 
-// gather metadata for symbolic links
-fn process_link(
-                    pdt: &str,
-                    link_path: String, 
-                    file_path: String, 
-                    hidden: bool,
-                    arguments: String,
-                    hotkey: String
-                ) -> std::io::Result<()> 
-{
-    let metadata = match fs::metadata(&link_path) {
-        Ok(m) => m,
-        Err(_e) => return Ok(())
-    };
-    let mut ctime = get_epoch_start();  // Most linux versions do not support created timestamps
-    if metadata.created().is_ok() {
-        ctime = format_date(metadata.created()?.into())?;
-    }
-    let atime = format_date(metadata.accessed()?.into())?;
-    let wtime = format_date(metadata.modified()?.into())?;
-    let size = metadata.len();
-    TxLink::new(pdt.to_string(), "ShellLink".to_string(), get_now()?, 
-                link_path, file_path, atime, wtime, 
-                ctime, size, hidden, arguments, hotkey).report_log();
-
-    Ok(())
-}
-
 fn format_hotkey_text(
                     hotkey: String
                 ) ->  std::io::Result<String>
@@ -207,11 +179,51 @@ pub fn get_link_info(
         None => String::new()
     };
     let hotkey = format_hotkey_text(format!("{:?}", symlink.header().hotkey()))?;
-    process_link(&pdt, 
-        link_path.to_string_lossy().into(), 
-        path.to_string_lossy().into(), 
-            is_hidden(&link_path.into())?,
-                arguments, hotkey)?;
+
+    let metadata = match fs::metadata(&link_path) {
+        Ok(m) => m,
+        Err(_e) => return Ok(())
+    };
+    let mut ctime = get_epoch_start();  // Most linux versions do not support created timestamps
+    if metadata.created().is_ok() {
+        ctime = format_date(metadata.created()?.into())?;
+    }
+    let atime = format_date(metadata.accessed()?.into())?;
+    let wtime = format_date(metadata.modified()?.into())?;
+    let size = metadata.len();
+    let working_dir = match symlink.working_dir() {
+        Some(a) => a.to_string(),
+        None => String::new()
+    };
+    let icon_location = match symlink.icon_location() {
+        Some(a) => a.to_string(),
+        None => String::new()
+    };
+    let comment = match symlink.name() {
+        Some(a) => a.to_string(),
+        None => String::new()
+    };
+    let show_command = format!("{:?}", symlink.header().show_command());
+    let flags = format!("{:?}", symlink.header().link_flags());
+    let volume = VolumeID::default();
+    let binding = LinkInfo::default();
+    let i = match symlink.link_info() {
+        Some(a) => a,
+        None => &binding
+    };
+    let v = match i.volume_id() {
+        Some(a) => a,
+        None => &volume
+    };
+    let drive_type = format!("{:?}", v.drive_type());
+    let drive_serial_number = format!("{:?}", v.drive_serial_number());
+    let volume_label = format!("{:?}", v.volume_label());
+    TxLink::new(pdt.to_string(), "ShellLink".to_string(), get_now()?, 
+                path.to_string_lossy().into_owned(), file_path.to_string_lossy().into_owned(), 
+                atime, wtime, ctime, size, 
+                is_hidden(&link_path.into())?, arguments, hotkey,
+                working_dir, icon_location, comment, show_command, flags, drive_type,
+                drive_serial_number, volume_label).report_log();
 
     process_file("ShellLink", &path, already_seen)?;
 

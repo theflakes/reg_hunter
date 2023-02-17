@@ -789,7 +789,15 @@ pub struct TxLink {
     pub size: u64,
     pub hidden: bool,
     pub arguments: String,
-    pub hotkey: String
+    pub hotkey: String,
+    pub working_dir: String,
+    pub icon_location: String,
+    pub comment: String,
+    pub show_command: String,
+    pub flags: String,
+    pub drive_type: String,
+    pub drive_serial_number: String,
+    pub volume_label: String,
 }
 impl TxLink {
     pub fn new(
@@ -804,7 +812,15 @@ impl TxLink {
             size: u64,
             hidden: bool,
             arguments: String,
-            hotkey: String) -> TxLink {
+            hotkey: String,
+            working_dir: String,
+            icon_location: String,
+            comment: String,
+            show_command: String,
+            flags: String,
+            drive_type: String,
+            drive_serial_number: String,
+            volume_label: String) -> TxLink {
         TxLink {
             parent_data_type,
             data_type,
@@ -817,7 +833,15 @@ impl TxLink {
             size,
             hidden,
             arguments,
-            hotkey
+            hotkey,
+            working_dir,
+            icon_location,
+            comment,
+            show_command,
+            flags,
+            drive_type,
+            drive_serial_number,
+            volume_label,
         }
     }
 
