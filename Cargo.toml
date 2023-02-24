@@ -2,7 +2,7 @@
 
 [package]
 name = "reg_hunter"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["Brian Kellogg <theflakes@gmail.com>"]
 edition = "2021"
 

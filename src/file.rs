@@ -5,9 +5,9 @@ extern crate lnk;
 
 
 use crate::{data_defs::*, mutate::*, time::*};
-use std::{fs::{self, File}, io::{self, BufRead, BufReader, Read}};
+use std::{fs::{self, File}, io::{self, BufRead, BufReader, Read}, path::PathBuf};
 use path_abs::{PathAbs, PathInfo};
-use lnk::{ShellLink, LinkInfo, linkinfo::VolumeID};
+use lnk::{ShellLink, linkinfo::VolumeID, LinkInfo};
 use std::os::windows::prelude::*;
 use std::{str, env};
 use regex::Regex;
@@ -119,7 +119,7 @@ pub fn get_parent_dir(
 // return the path that a symlink points to
 fn resolve_link(
                     link_path: &std::path::Path,
-                    file_path: &std::path::Path
+                    file_path: &String
                 ) -> std::io::Result<std::path::PathBuf> 
 {
     let parent_dir = get_parent_dir(link_path);
@@ -166,24 +166,24 @@ pub fn get_link_info(
         Ok(l) => l,
         Err(_e) => return Ok(())
     };
-    let file_path = match symlink.relative_path() {
-        Some(p) => push_file_path(p, ""),
-        None => std::path::PathBuf::new()
+    let metadata = match fs::metadata(&link_path) {
+        Ok(m) => m,
+        Err(_e) => return Ok(())
     };
-
-    // translate link target path to absolute path
-    let path = resolve_link(&link_path, &file_path)?;
-
+    let binding = LinkInfo::default();
+    let i = match symlink.link_info() {
+        Some(a) => a,
+        None => &binding
+    };
+    let path = match i.local_base_path() {
+        Some(a) => a.to_string(),
+        None => String::new()
+    };
     let arguments =  match symlink.arguments() {
         Some(a) => a.to_string(),
         None => String::new()
     };
     let hotkey = format_hotkey_text(format!("{:?}", symlink.header().hotkey()))?;
-
-    let metadata = match fs::metadata(&link_path) {
-        Ok(m) => m,
-        Err(_e) => return Ok(())
-    };
     let mut ctime = get_epoch_start();  // Most linux versions do not support created timestamps
     if metadata.created().is_ok() {
         ctime = format_date(metadata.created()?.into())?;
@@ -191,10 +191,7 @@ pub fn get_link_info(
     let atime = format_date(metadata.accessed()?.into())?;
     let wtime = format_date(metadata.modified()?.into())?;
     let size = metadata.len();
-    let working_dir = match symlink.working_dir() {
-        Some(a) => a.to_string(),
-        None => String::new()
-    };
+    let working_dir = format!("{:?}", symlink.working_dir());
     let icon_location = match symlink.icon_location() {
         Some(a) => a.to_string(),
         None => String::new()
@@ -206,11 +203,6 @@ pub fn get_link_info(
     let show_command = format!("{:?}", symlink.header().show_command());
     let flags = format!("{:?}", symlink.header().link_flags());
     let volume = VolumeID::default();
-    let binding = LinkInfo::default();
-    let i = match symlink.link_info() {
-        Some(a) => a,
-        None => &binding
-    };
     let v = match i.volume_id() {
         Some(a) => a,
         None => &volume
@@ -219,14 +211,14 @@ pub fn get_link_info(
     let drive_serial_number = format!("{:?}", v.drive_serial_number());
     let volume_label = format!("{:?}", v.volume_label());
     TxLink::new(pdt.to_string(), "ShellLink".to_string(), get_now()?, 
-                path.to_string_lossy().into_owned(), file_path.to_string_lossy().into_owned(), 
+            link_path.to_string_lossy().into_owned(), path.clone(), 
                 atime, wtime, ctime, size, 
-                is_hidden(&link_path.into())?, arguments, hotkey,
-                working_dir, icon_location, comment, show_command, flags, drive_type,
-                drive_serial_number, volume_label).report_log();
+                is_hidden(&link_path.into())?, arguments, hotkey, working_dir,
+            icon_location, comment, show_command, flags, drive_type, drive_serial_number, volume_label).report_log();
 
-    process_file("ShellLink", &path, already_seen)?;
-
+    let mut pb = PathBuf::new();
+    pb.push(path);
+    process_file("ShellLink", &pb, already_seen)?;
     Ok(())
 }
 
