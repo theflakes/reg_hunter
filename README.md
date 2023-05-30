@@ -148,7 +148,7 @@ Note:
     If not run as an administrator some telemetry cannot be harvested.
 
     Only logs that are matched by a hunt are printed out unless the --print
-    or --explicite argument is used.
+    or --explicit argument is used.
 
     An error log with tag of 'HiddenKey' will be generated if any registry key
     that fails to open is identified as a maliciously hidden key.
