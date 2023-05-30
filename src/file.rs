@@ -249,7 +249,10 @@ pub fn process_file(
     let atime = format_date(metadata.accessed()?.to_owned().into())?;
     let wtime = format_date(metadata.modified()?.to_owned().into())?;
     let size = metadata.len();
-    let file = open_file(&file_path)?;
+    let file = match open_file(&file_path) {
+        Ok(f) => f,
+        Err(_e) => return Ok(()),
+    };
     let (md5, mime_type) = match get_file_content_info(&file) {
         Ok((m, t)) => (m, t),
         Err(_e) => ("".to_string(), "".to_string())
