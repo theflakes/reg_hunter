@@ -29,7 +29,7 @@ pub fn open_file(
                 file_path: &std::path::Path
             ) -> std::io::Result<std::fs::File> 
 {
-    match File::open(&file_path) {
+    match File::options().read(true).write(false).open(&file_path) {
         Ok(f) => return Ok(f),
         Err(e) => return Err(e)
     }
