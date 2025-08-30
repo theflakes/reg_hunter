@@ -118,21 +118,6 @@ pub fn get_parent_dir(
     };
 }
 
-// return the path that a symlink points to
-fn resolve_link(
-                    link_path: &std::path::Path,
-                    file_path: &String
-                ) -> std::io::Result<std::path::PathBuf> 
-{
-    let parent_dir = get_parent_dir(link_path);
-    match std::env::set_current_dir(parent_dir) {
-        Ok(f) => f,
-        Err(_e) => return Ok(std::path::PathBuf::new())
-    };
-    let abs = PathAbs::new(&file_path)?;
-    Ok(dunce::simplified(&abs.as_path()).into())
-}
-
 fn format_hotkey_text(
                     hotkey: String
                 ) ->  std::io::Result<String>
@@ -153,16 +138,35 @@ fn format_hotkey_text(
     Ok(hk)
 }
 
+// return the path that a symlink points to
+fn resolve_link(
+                    link_path: &std::path::Path,
+                    file_path: &String
+                ) -> std::io::Result<String> 
+{
+    let parent_dir = get_parent_dir(link_path);
+    match std::env::set_current_dir(parent_dir) {
+        Ok(f) => f,
+        Err(_e) => {
+            let p = file_path.to_owned();
+            return Ok(p)
+        }
+    };
+    let expanded_path = expand_env_vars(file_path)?;
+    // Ok(expanded_path)
+    let abs = PathAbs::new(&expanded_path)?;
+    Ok(dunce::simplified(&abs.as_path()).to_string_lossy().into_owned())
+}
 
 /*
     return parent data_type and path to file
     never return the path to a symnlink
 */
 pub fn get_link_info(
-                    pdt: &str, 
-                    link_path: &std::path::Path,
-                    already_seen: &mut Vec<String>
-                ) -> std::io::Result<()> 
+            pdt: &str, 
+            link_path: &std::path::Path,
+            already_seen: &mut Vec<String>
+        ) -> std::io::Result<()> 
 {
     let symlink= match ShellLink::open(&link_path, WINDOWS_1252) {
         Ok(l) => l,
@@ -176,22 +180,18 @@ pub fn get_link_info(
         Ok(m) => m,
         Err(_e) => return Ok(())
     };
-    let rel_path = match symlink.string_data().relative_path() {
+    let mut rel_path = match symlink.string_data().relative_path() {
         Some(p) => p.to_string(),
         None => String::new()
     };
-    // let target_path = if !working_dir.is_empty() {
-    //     PathBuf::from(&working_dir).join(&rel_path)
-    // } else {
-    //     PathBuf::from(&rel_path)
-    // };
-    let path = resolve_link(&link_path, &rel_path)?.to_string_lossy().into_owned();
+
+    let path = resolve_link(&link_path, &rel_path)?;
     let arguments =  match symlink.string_data().command_line_arguments() {
         Some(a) => a.to_string(),
         None => String::new()
     };
     let hotkey = format_hotkey_text(format!("{:?}", symlink.header().hotkey()))?;
-    let mut ctime = get_epoch_start();  // Most linux versions do not support created timestamps
+    let mut ctime = get_epoch_start();
     if metadata.created().is_ok() {
         ctime = format_date(metadata.created()?.into())?;
     }
@@ -288,7 +288,7 @@ pub fn expand_env_vars(
         "" => String::from("%"),
         varname => match env::var(varname) {
             Ok(v) => v,
-            Err(_e) => varname.to_string()
+            Err(_e) => c.get(0).map_or(String::new(), |m| m.as_str().to_string())
         }.to_string()
     }).into();
 
