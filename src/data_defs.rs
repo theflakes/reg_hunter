@@ -22,12 +22,12 @@ use std::sync::Mutex;
 
 // do not like using "unwrap" here
 lazy_static! {
-    pub static ref USER_DIR: String = env::var("COMPUTERNAME").unwrap();
-    pub static ref DEVICE_NAME: String = env::var("COMPUTERNAME").unwrap();
-    pub static ref DEVICE_DOMAIN: String = env::var("USERDOMAIN").unwrap();
+    pub static ref USER_DIR: String = env::var("COMPUTERNAME").unwrap_or_else(|_| "".to_string());
+    pub static ref DEVICE_NAME: String = env::var("COMPUTERNAME").unwrap_or_else(|_| "".to_string());
+    pub static ref DEVICE_DOMAIN: String = env::var("USERDOMAIN").unwrap_or_else(|_| "".to_string());
     pub static ref DEVICE_TYPE: String = whoami::distro();
-    pub static ref SYSTEM_ROOT: String = format!("{}\\", env::var("SYSTEMROOT").unwrap());
-    pub static ref SYSTEM_DRIVE: String = format!("{}\\", env::var("SYSTEMDRIVE").unwrap());
+    pub static ref SYSTEM_ROOT: String = format!("{}\\", env::var("SYSTEMROOT").unwrap_or_else(|_| "".to_string()));
+    pub static ref SYSTEM_DRIVE: String = format!("{}\\", env::var("SYSTEMDRIVE").unwrap_or_else(|_| "".to_string()));
 }
 
 // where to search for files
@@ -141,10 +141,10 @@ Options:
         last_write_time and only output logs where the last_write_time falls 
         within that window. Window start is inclusive, window end is exclusive. 
         NOTE: key last_write_time can be timestomped.
-        --start <UTC_start_time>        Start of time window: [default: 0000-01-01T00:00:00]
-                                        format: YYYY-MM-DDTHH:MM:SS
-        --end <UTC_end_time>            End of time window: [default: 9999-12-31T23:59:59]
-                                        format: YYYY-MM-DDTHH:MM:SS
+        --start <UTC_start_time>        Start of time window: [default: 1970-01-01T00:00:00.000Z]
+                                        format: YYYY-MM-DDTHH:MM:SS.fffZ
+        --end <UTC_end_time>            End of time window: [default: 9999-12-31T23:59:59.999Z]
+                                        format: YYYY-MM-DDTHH:MM:SS.fffZ
 
     Custom hunts (regex and/or hex required):
         NOTE: A limitation of the regex hunt is that only REG_BINARY values
@@ -249,12 +249,21 @@ lazy_static! {
                     .and_then(|d| d.deserialize())
                     .unwrap_or_else(|e| e.exit());
 
-    pub static ref CUSTOM_REGEX: Regex = Regex::new(&format!(r"{}{}", "(?mi)".to_string(), ARGS.flag_regex)).expect("Invalid Regex");
-    pub static ref TIME_START: DateTime<Utc> = Utc.datetime_from_str(&ARGS.flag_start, "%Y-%m-%dT%H:%M:%S").expect("Invalid start time!!!");
-    pub static ref TIME_END: DateTime<Utc> = Utc.datetime_from_str(&ARGS.flag_end, "%Y-%m-%dT%H:%M:%S").expect("Invalid end time!!!");
+    pub static ref CUSTOM_REGEX: Regex = Regex::new(&format!(r"{}{}", "(?mi)".to_string(), ARGS.flag_regex))
+        .expect("Invalid Regex");
+    pub static ref TIME_START: DateTime<Utc> = chrono::DateTime::parse_from_rfc3339(&ARGS.flag_start)
+        .expect("Invalid start time!!! Expected RFC 3339 format (e.g., 2025-08-30T11:39:20.123Z)")
+        .with_timezone(&Utc);
+    pub static ref TIME_END: DateTime<Utc> = chrono::DateTime::parse_from_rfc3339(&ARGS.flag_end)
+        .expect("Invalid end time!!! Expected RFC 3339 format (e.g., 2025-08-30T11:39:20.123Z)")
+        .with_timezone(&Utc);
     pub static ref FIND_HEX: Vec<u8> = hex_to_bytes(&ARGS.flag_hex).expect("Invalid hex string!!!");
     //pub static ref OUT_FILE: Mutex<File> = Mutex::new(std::fs::File::create(&ARGS.flag_outfile).expect("Cannot create file"));
-    pub static ref OUT_FILE: Mutex<File> = Mutex::new(std::fs::OpenOptions::new().create(true).append(true).open(&ARGS.flag_outfile).expect("Unable to open file"));  
+    pub static ref OUT_FILE: Mutex<File> = Mutex::new(std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&ARGS.flag_outfile)
+        .expect("Unable to open file"));  
 }
 
 /*
@@ -795,9 +804,9 @@ pub struct TxLink {
     pub comment: String,
     pub show_command: String,
     pub flags: String,
-    pub drive_type: String,
-    pub drive_serial_number: String,
-    pub volume_label: String,
+    // pub drive_type: String,
+    // pub drive_serial_number: String,
+    // pub volume_label: String,
 }
 impl TxLink {
     pub fn new(
@@ -818,9 +827,10 @@ impl TxLink {
             comment: String,
             show_command: String,
             flags: String,
-            drive_type: String,
-            drive_serial_number: String,
-            volume_label: String) -> TxLink {
+            // drive_type: String,
+            // drive_serial_number: String,
+            // volume_label: String
+        ) -> TxLink {
         TxLink {
             parent_data_type,
             data_type,
@@ -839,9 +849,9 @@ impl TxLink {
             comment,
             show_command,
             flags,
-            drive_type,
-            drive_serial_number,
-            volume_label,
+            // drive_type,
+            // drive_serial_number,
+            // volume_label,
         }
     }
 

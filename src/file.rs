@@ -1,5 +1,5 @@
-extern crate tree_magic;        // needed to find MIME type of files
-extern crate path_abs;          // needed to create absolute file paths from relative
+extern crate infer;
+
 extern crate md5;
 extern crate lnk;
 
@@ -12,16 +12,18 @@ use std::os::windows::prelude::*;
 use std::{str, env};
 use regex::Regex;
 use regex::Captures;
+use lnk::encoding::WINDOWS_1252;
 
 
 const MAX_FILE_SIZE: u64 = 256000000;
 
 // return file mime type string
-pub fn get_filetype(
-                    buffer: &mut Vec<u8>
-                ) -> String
-{
-    tree_magic::from_u8(buffer)
+fn get_mimetype(buffer: &[u8]) -> String {
+    let kind = infer::get(buffer);
+    match kind {
+        Some(k) => k.mime_type().to_string(),
+        None => "".to_string()
+    }
 }
 
 // get handle to a file
@@ -70,7 +72,7 @@ pub fn get_file_content_info(
         if file.metadata()?.len() <= MAX_FILE_SIZE { // don't hash very large files
             let mut buffer = read_file_bytes(file)?;
             md5 = format!("{:x}", md5::compute(&buffer)).to_lowercase();
-            mime_type = get_filetype(&mut buffer);
+            mime_type = get_mimetype(&mut buffer);
             drop(buffer);
         } 
     } else {
@@ -151,8 +153,8 @@ fn format_hotkey_text(
     Ok(hk)
 }
 
+
 /*
-    determine if a file is a symlink or not
     return parent data_type and path to file
     never return the path to a symnlink
 */
@@ -162,24 +164,29 @@ pub fn get_link_info(
                     already_seen: &mut Vec<String>
                 ) -> std::io::Result<()> 
 {
-    let symlink= match ShellLink::open(&link_path) {
+    let symlink= match ShellLink::open(&link_path, WINDOWS_1252) {
         Ok(l) => l,
         Err(_e) => return Ok(())
+    };
+    let working_dir = match symlink.string_data().working_dir() {
+        Some(a) => a.to_string(),
+        None => String::new()
     };
     let metadata = match fs::metadata(&link_path) {
         Ok(m) => m,
         Err(_e) => return Ok(())
     };
-    let binding = LinkInfo::default();
-    let i = match symlink.link_info() {
-        Some(a) => a,
-        None => &binding
-    };
-    let path = match i.local_base_path() {
-        Some(a) => a.to_string(),
+    let rel_path = match symlink.string_data().relative_path() {
+        Some(p) => p.to_string(),
         None => String::new()
     };
-    let arguments =  match symlink.arguments() {
+    // let target_path = if !working_dir.is_empty() {
+    //     PathBuf::from(&working_dir).join(&rel_path)
+    // } else {
+    //     PathBuf::from(&rel_path)
+    // };
+    let path = resolve_link(&link_path, &rel_path)?.to_string_lossy().into_owned();
+    let arguments =  match symlink.string_data().command_line_arguments() {
         Some(a) => a.to_string(),
         None => String::new()
     };
@@ -191,30 +198,29 @@ pub fn get_link_info(
     let atime = format_date(metadata.accessed()?.into())?;
     let wtime = format_date(metadata.modified()?.into())?;
     let size = metadata.len();
-    let working_dir = format!("{:?}", symlink.working_dir());
-    let icon_location = match symlink.icon_location() {
+    let icon_location = match symlink.string_data().icon_location() {
         Some(a) => a.to_string(),
         None => String::new()
     };
-    let comment = match symlink.name() {
+    let comment = match symlink.string_data().name_string() {
         Some(a) => a.to_string(),
         None => String::new()
     };
     let show_command = format!("{:?}", symlink.header().show_command());
     let flags = format!("{:?}", symlink.header().link_flags());
-    let volume = VolumeID::default();
-    let v = match i.volume_id() {
-        Some(a) => a,
-        None => &volume
-    };
-    let drive_type = format!("{:?}", v.drive_type());
-    let drive_serial_number = format!("{:?}", v.drive_serial_number());
-    let volume_label = format!("{:?}", v.volume_label());
+    // let volume = VolumeID::default();
+    // let v = match i.volume_id() {
+    //     Some(a) => a,
+    //     None => &volume
+    // };
+    // let drive_type = format!("{:?}", v..drive_type());
+    // let drive_serial_number = format!("{:?}", v.drive_serial_number());
+    // let volume_label = format!("{:?}", v.volume_label());
     TxLink::new(pdt.to_string(), "ShellLink".to_string(), get_now()?, 
             link_path.to_string_lossy().into_owned(), path.clone(), 
                 atime, wtime, ctime, size, 
                 is_hidden(&link_path.into())?, arguments, hotkey, working_dir,
-            icon_location, comment, show_command, flags, drive_type, drive_serial_number, volume_label).report_log();
+            icon_location, comment, show_command, flags).report_log();
 
     let mut pb = PathBuf::new();
     pb.push(path);

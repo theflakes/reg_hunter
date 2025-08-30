@@ -31,6 +31,8 @@ use {data_defs::*, time::*, mutate::*, hunts::*};
 use std::{io, str};
 use winreg::enums::*;
 use winreg::RegKey;
+use std::io::{Error, ErrorKind};
+use chrono::NaiveDate;
 
 
 /*
@@ -383,13 +385,15 @@ fn process_interesting_hku(
 // find registry key last write time
 fn get_reg_last_write_time(
                             key: &RegKey
-                        ) -> Result<String, std::io::Error>    
+                        ) -> Result<String, std::io::Error>
 {
     let info = key.query_info()?;
     let ts = info.get_last_write_time_system();
-    let lwt = format!("{}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}", 
-        ts.wYear, ts.wMonth, ts.wDay, ts.wHour, ts.wMinute, ts.wSecond, ts.wMilliseconds);
-    Ok(lwt)
+    let naive_datetime = chrono::NaiveDate::from_ymd_opt(ts.wYear as i32, ts.wMonth as u32, ts.wDay as u32)
+        .and_then(|d| d.and_hms_milli_opt(ts.wHour as u32, ts.wMinute as u32, ts.wSecond as u32, ts.wMilliseconds as u32))
+        .ok_or_else(|| Error::new(ErrorKind::InvalidData, "Invalid date/time from registry"))?;
+    let datetime_utc = naive_datetime.and_utc();
+    format_date(datetime_utc)
 }
 
 fn examine_name_value(
@@ -404,7 +408,10 @@ fn examine_name_value(
 {
     // check if last_write_time is in the examination time window
     let lwt = get_reg_last_write_time(&hkey)?;
-    if !in_time_window(&lwt)? { return Ok(()) }
+    if !in_time_window(&lwt)
+        .map_err(|e| Error::new(ErrorKind::InvalidData, e))? {
+        return Ok(());
+    }
 
     let mut tags = vec![];
 

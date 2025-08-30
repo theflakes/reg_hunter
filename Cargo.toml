@@ -2,7 +2,7 @@
 
 [package]
 name = "reg_hunter"
-version = "0.7.4"
+version = "0.7.5"
 authors = ["Brian Kellogg <theflakes@gmail.com>"]
 edition = "2021"
 
@@ -32,6 +32,6 @@ regex = "*"
 serde = "*"
 serde_derive = "*"
 serde_json = "*"
-tree_magic = "*"
 whoami = "*"
 winreg = "*"
+infer = "*"
