@@ -6,13 +6,13 @@ extern crate lnk;
 
 use crate::{data_defs::*, mutate::*, time::*};
 use std::{fs::{self, File}, io::{self, BufRead, BufReader, Read}, path::PathBuf};
+use bstr::ByteSlice;
 use path_abs::{PathAbs, PathInfo};
-use lnk::{ShellLink, linkinfo::VolumeID, LinkInfo};
+use lnk::{encoding::{self, WINDOWS_1252}, LinkInfo, ShellLink, extradata::ExtraDataBlock};
 use std::os::windows::prelude::*;
 use std::{str, env};
 use regex::Regex;
 use regex::Captures;
-use lnk::encoding::WINDOWS_1252;
 
 
 const MAX_FILE_SIZE: u64 = 256000000;
@@ -172,6 +172,7 @@ pub fn get_link_info(
         Ok(l) => l,
         Err(_e) => return Ok(())
     };
+    println!("{:#?}", symlink);
     let working_dir = match symlink.string_data().working_dir() {
         Some(a) => a.to_string(),
         None => String::new()
