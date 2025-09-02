@@ -187,20 +187,20 @@ pub fn get_link_info(
 
     let mut path = resolve_link(&link_path, &rel_path)?;
     if path.is_empty() {
-            for block in symlink.extra_data().blocks() {
-                match block {
-                    ExtraDataBlock::EnvironmentProps(target_id) => {
-                        if let Some(unicode_target) = target_id.target_unicode() {
-                            path = unicode_target.to_string();
-                            break;
-                        } else  {
-                            path = target_id.target_ansi().to_string();
-                            break;
-                        }
+        for block in symlink.extra_data().blocks() {
+            match block {
+                ExtraDataBlock::EnvironmentProps(target_id) => {
+                    if let Some(unicode_target) = target_id.target_unicode() {
+                        path = unicode_target.to_string();
+                        break;
+                    } else  {
+                        path = target_id.target_ansi().to_string();
+                        break;
                     }
-                    _ => continue,
                 }
+                _ => continue,
             }
+        }
     }
 
     let arguments =  match symlink.string_data().command_line_arguments() {
