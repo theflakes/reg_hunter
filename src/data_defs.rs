@@ -31,7 +31,7 @@ lazy_static! {
 }
 
 // where to search for files
-pub const SYSTEM_PATHS: [&str; 35] = [
+pub const SYSTEM_PATHS: [&str; 34] = [
     "",
     "$recycle.bin\\",
     "boot\\",
@@ -39,8 +39,9 @@ pub const SYSTEM_PATHS: [&str; 35] = [
     "programdata\\",
     "temp\\",
     "users\\",
-    "users\\desktop\\",
-    "users\\documents\\",
+    // "users\\desktop\\",      // add logic to search users subdirectories
+    // "users\\documents\\",
+    "users\\default\\",
     "users\\public\\",
     "windows\\",
     "windows\\apppatch\\",
