@@ -1,5 +1,4 @@
 extern crate infer;
-
 extern crate md5;
 extern crate lnk;
 
