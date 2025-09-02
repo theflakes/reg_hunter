@@ -171,7 +171,6 @@ pub fn get_link_info(
         Ok(l) => l,
         Err(_e) => return Ok(())
     };
-    println!("{:#?}", symlink);
     let working_dir = match symlink.string_data().working_dir() {
         Some(a) => a.to_string(),
         None => String::new()
@@ -185,7 +184,24 @@ pub fn get_link_info(
         None => String::new()
     };
 
-    let path = resolve_link(&link_path, &rel_path)?;
+    let mut path = resolve_link(&link_path, &rel_path)?;
+    if path.is_empty() {
+            for block in symlink.extra_data().blocks() {
+                match block {
+                    ExtraDataBlock::EnvironmentProps(target_id) => {
+                        if let Some(unicode_target) = target_id.target_unicode() {
+                            path = unicode_target.to_string();
+                            break;
+                        } else  {
+                            path = target_id.target_ansi().to_string();
+                            break;
+                        }
+                    }
+                    _ => continue,
+                }
+            }
+    }
+
     let arguments =  match symlink.string_data().command_line_arguments() {
         Some(a) => a.to_string(),
         None => String::new()
