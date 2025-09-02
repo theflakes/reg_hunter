@@ -160,6 +160,7 @@ fn resolve_link(
 /*
     return parent data_type and path to file
     never return the path to a symnlink
+    REFACTOR
 */
 pub fn get_link_info(
             pdt: &str, 
